@@ -18,17 +18,17 @@
 </template>
 
 <script setup>
-import { Head } from '@inertiajs/vue3';
-import Dice from '../components/Dice.vue';
+    import { Head } from '@inertiajs/vue3';
+    import Dice from '../components/Dice.vue';
 
-const props = defineProps({
-    gamecode: {
-        type: String,
-    },
-    players: {
-        type: Object,
-    },
-});
+    const props = defineProps({
+        gamecode: {
+            type: String,
+        },
+        players: {
+            type: Object,
+        },
+    });
 
-const gamecode = props.gamecode;
+    const gamecode = props.gamecode;
 </script>

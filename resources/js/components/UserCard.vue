@@ -10,8 +10,8 @@
             </div>
         </div>
         <div class="flex items-center space-x-2">
-            <div class="w-3 h-3 bg-gray-600 rounded-full {{ status === 'ready' ? 'bg-green-500' : 'bg-gray-600' }}"></div>
-            <span class="text-xs text-gray-500 font-medium" contenteditable="false">{{ status === 'ready' ? 'Ready' : 'Waiting' }}</span>
+            <div :class="status === 'ready' ? 'bg-green-500' : 'bg-gray-600'" class="w-3 h-3 bg-gray-600 rounded-full"></div>
+            <span :class="status === 'ready' ? 'text-green-500' : 'text-gray-500'" class="text-xs text-gray-500 font-medium" contenteditable="false">{{ status === 'ready' ? 'Ready' : 'Waiting' }}</span>
         </div>
     </div>
 </template>

@@ -17,23 +17,27 @@
                 <form id="game-form" class="section-clickable space-y-6" @submit.prevent="form.post('/join-game')">
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-gray-300" contenteditable="false">Username</label>
-                        <Input v-model="form.username" placeholder="Username" />
+                        <Input v-model="form.username" placeholder="Username" required />
                     </div>
 
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-gray-300" contenteditable="false">Game code</label>
-                        <Input v-model="form.gamecode" placeholder="Game code" :maxlength="6" />
+                        <Input v-model="form.gamecode" placeholder="Game code" :maxlength="6" :minlength="6" required />
                     </div>
 
                     <button
-                        class="section-clickable flex w-full cursor-pointer items-center justify-center rounded-xl bg-[#39b54a] px-6 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-200 hover:bg-green-500 hover:shadow-xl"
-                        :disabled="form.processing"
+                        class="section-clickable flex w-full disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer items-center justify-center rounded-xl bg-[#39b54a] px-6 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-200 hover:bg-green-500 hover:shadow-xl"
+                        :disabled="
+                        form.processing ||
+                        form.username === '' ||
+                        form.gamecode === '' ||
+                        form.gamecode.length !== 6"
                         type="submit"
                     >
                         <Icon v-if="!form.processing" icon="ion:play" class="mr-3 text-2xl" />
                         <Icon v-else icon="eos-icons:loading" class="mr-3 animate-spin text-2xl" />
-                        <span v-if="!form.processing">Join / Create a game</span>
-                        <span v-else>Loading...</span>
+                        <span :disabled="form.processing" v-if="!form.processing">Join / Create a game</span>
+                        <span  v-else>Loading...</span>
                     </button>
 
                 </form>

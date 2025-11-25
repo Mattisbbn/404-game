@@ -3,6 +3,7 @@
         <input
             v-model="model"
             :maxlength="maxlength || null"
+            :minlength="minlength || null"
             type="text"
             :placeholder="placeholder"
             class="w-full px-4 py-4 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all duration-200 section-clickable"
@@ -24,6 +25,10 @@
             default: '',
         },
         maxlength: {
+            type: Number,
+            default: 0,
+        },
+        minlength: {
             type: Number,
             default: 0,
         },

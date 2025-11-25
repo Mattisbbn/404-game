@@ -9,7 +9,7 @@ import 'vue-toast-notification/dist/theme-default.css';
 
 // 1. Imports propres
 import Echo from 'laravel-echo';
-// import Pusher from 'pusher-js';
+import Pusher from 'pusher-js';
 
 // 2. Déclaration TypeScript (Très bien !)
 declare global {
@@ -20,7 +20,7 @@ declare global {
 }
 
 // 3. Configuration Reverb
-// window.Pusher = Pusher;
+window.Pusher = Pusher;
 
 window.Echo = new Echo({
     broadcaster: 'reverb',
@@ -30,7 +30,6 @@ window.Echo = new Echo({
     wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
     forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
     enabledTransports: ['ws', 'wss'],
-    path: '/reverb',
 });
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';

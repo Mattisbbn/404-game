@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Player extends Model
 {
-    protected $fillable = ['username', 'lobby_id', 'score'];
+    protected $fillable = ['username', 'lobby_id', 'score', 'status', 'color'];
 
     public function lobby()
     {

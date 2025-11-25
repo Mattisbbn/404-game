@@ -4,11 +4,11 @@
     <main class="cursor-default-must flex h-screen flex-col">
         <section id="hero-section" class="section-clickable flex flex-1 flex-col justify-center px-6">
             <div class="mx-auto w-full max-w-sm">
-                <div id="logo-area" class="section-clickable mb-12 text-center">
+                <div id="logo-area" class="section-clickable mb-6 text-center">
                     <div
                         class="from-accent mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br to-green-400 shadow-2xl"
                     >
-                        <Icon icon="mdi:dice" class="text-3xl text-white" />
+                    <img :src="logo" alt="logo" class="h-18  object-contain" />
                     </div>
                     <h2 class="mb-3 text-3xl font-bold text-white" contenteditable="false">404</h2>
                     <p class="text-lg text-gray-400" contenteditable="false">desc</p>
@@ -35,6 +35,7 @@
                         <span v-if="!form.processing">Join / Create a game</span>
                         <span v-else>Loading...</span>
                     </button>
+
                 </form>
             </div>
         </section>
@@ -42,11 +43,15 @@
 </template>
 
 <script setup>
-import { Icon } from '@iconify/vue';
-import { Head, useForm } from '@inertiajs/vue3';
-import Input from '../components/Input.vue';
-const form = useForm({
-    username: '',
-    gamecode: '',
-});
+    import logo from '../../img/logo.svg';
+
+
+
+    import { Icon } from '@iconify/vue';
+    import { Head, useForm } from '@inertiajs/vue3';
+    import Input from '../components/Input.vue';
+    const form = useForm({
+        username: '',
+        gamecode: '',
+    });
 </script>

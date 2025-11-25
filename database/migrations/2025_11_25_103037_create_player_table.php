@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('username');
             $table->foreignId('lobby_id')->constrained('lobbies')->onDelete('cascade');
             $table->integer('score')->default(0);
+            $table->string('status')->default('waiting');
+            $table->string('color')->default('purple');
         });
     }
 

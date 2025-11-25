@@ -44,7 +44,7 @@
                             </div>
                         </div> -->
 
-                    <UserCard v-for="player in players" :key="player.id" :username="player.username" :status="player.status" :color="player.color" />
+                    <UserCard v-for="player in players" :is-me="player.id === playerid" :key="player.id" :username="player.username" :status="player.status" :color="player.color" />
                 </div>
             </div>
             <!--
@@ -90,6 +90,9 @@ const props = defineProps({
     players: {
         type: Object,
     },
+    playerId: {
+        type: Number,
+    },
 });
 
 const gamecode = props.gamecode;
@@ -106,5 +109,6 @@ const copyGamecode = async () => {
     });
 };
 
+const playerid = props.playerId;
 
 </script>

@@ -1,0 +1,15 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Lobby extends Model
+{
+    protected $fillable = ['gamecode', 'is_active'];
+
+    public function players()
+    {
+        return $this->hasMany(Player::class, 'lobby_id');
+    }
+}

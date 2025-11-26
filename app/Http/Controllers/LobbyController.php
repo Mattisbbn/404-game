@@ -48,6 +48,19 @@ class LobbyController extends Controller
 
         broadcast(new \App\Events\PlayerStatusUpdated($player->id, $player->status, $player->lobby->gamecode));
 
+        $players = Player::where('lobby_id', $player->lobby_id)->get();
+
+        $playersReady = $players->where('status', 'ready')->count();
+        if ($playersReady === $players->count() && $players->count() > 0) {
+            $shuffledPlayers = $players->shuffle()->values();
+            $shuffledPlayers->each(function (Player $lobbyPlayer, int $index) {
+                $lobbyPlayer->order = $index + 1;
+                $lobbyPlayer->save();
+            });
+
+            $player->lobby->startGame();
+        }
+
         return response()->json(['status' => $player->status]);
     }
 

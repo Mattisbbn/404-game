@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lobbies', function (Blueprint $table) {
+        Schema::create('gameboard', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->string('gamecode')->unique();
-            $table->boolean('is_active')->default(true);
-            $table->boolean('is_started')->default(false);
+            $table->integer('score');
+            $table->integer('position');
+            $table->enum('category', ['password','phishing','social_media','cyber_risk','']);
         });
     }
 
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('lobbies');
+        Schema::dropIfExists('gameboard');
     }
 };

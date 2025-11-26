@@ -5,7 +5,8 @@ namespace Database\Seeders;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-
+use App\Models\Gameboard;
+use Database\Factories\GameboardFactory;
 class DatabaseSeeder extends Seeder
 {
     /**
@@ -19,5 +20,13 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        foreach (GameboardFactory::boardEntries() as $entry) {
+            Gameboard::factory()->create([
+                'score' => $entry['score'],
+                'position' => $entry['position'],
+                'category' => $entry['category'],
+            ]);
+        }
     }
 }

@@ -63,6 +63,7 @@
 <script setup>
 import { Icon } from '@iconify/vue';
 import axios from 'axios';
+import { router } from '@inertiajs/vue3';
 import { onMounted, onUnmounted, ref,computed } from 'vue';
 import { useToast } from 'vue-toast-notification';
 import UserCard from '../components/UserCard.vue';
@@ -152,6 +153,14 @@ onMounted(() => {
             if (e.userId === props.playerId) {
                 status.value = e.status;
             }
+        })
+        .listen('.GameStarted', (event) => {
+            toast.success('Game is starting!', {
+                duration: 2000,
+                position: 'top-right',
+            });
+
+            router.visit(`/game/${event.gamecode ?? gamecode}`);
         });
 });
 

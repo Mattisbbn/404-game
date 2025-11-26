@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use App\Models\Player;
 use App\Events\GameRealtimeEvent;
 use App\Models\Gameboard;
+use App\Models\Question;
 class GameController extends Controller
 {
     public function show(string $gamecode)
@@ -70,9 +71,9 @@ class GameController extends Controller
             return response()->json(['success' => false, 'message' => 'You have already rolled the dice']);
         }
 
-        // Plateau circulaire : si on dépasse la dernière case, on repart de 0 avec le reste des pas
-        $maxPosition = Gameboard::max('position');   // ex : positions 0..33
-        $boardSize   = $maxPosition + 1;             // nombre total de cases
+
+        $maxPosition = Gameboard::max('position');
+        $boardSize   = $maxPosition + 1;
 
         $totalSteps = $player->position + $result;
         $player->position = $totalSteps % $boardSize;
@@ -92,8 +93,25 @@ class GameController extends Controller
         ));
 
 
+        $question = Question::where('category', $gameboard->category)->inRandomOrder()->first();
+        if (!$question) {
+            return response()->json(['success' => false, 'message' => 'Question not found']);
+        }
 
+        $player->current_question_id = $question->id;
+        $player->save();
 
-        return response()->json(['success' => true]);
+        broadcast(event: new GameRealtimeEvent(
+            gamecode: $gamecode,
+            type: 'question',
+            data: [
+                    'player_id' => $player->id,
+                    'question' => $player->question,
+            ],
+        ));
+
+        return response()->json(['success' => true, 'question' => $question]);
     }
+
+
 }

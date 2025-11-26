@@ -4,3 +4,11 @@ export const colors = {
     red: '#e40425',
     blue: '#66c6e7',
 };
+export const categoriesColors = {
+    password: colors.blue,
+    phishing: colors.yellow,
+    social_media: colors.green,
+    cyber_risk: colors.red,
+};
+
+

@@ -23,6 +23,7 @@ return new class extends Migration
             $table->integer('position')->default(0);
             $table->boolean('is_current')->default(false);
             $table->boolean('canRoll')->default(true);
+            $table->foreignId('current_question_id')->nullable()->constrained('question')->onDelete('set null');
         });
     }
 

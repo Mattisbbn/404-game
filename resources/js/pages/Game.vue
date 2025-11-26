@@ -1,4 +1,5 @@
 <template>
+
     <Head :title="`Game ${gamecode}`"></Head>
     <div class="flex flex-col h-screen cursor-default-must">
 
@@ -8,13 +9,12 @@
                 <div id="current-player" class="mb-6 section-clickable">
                     <div class="flex items-center justify-center space-x-2 mb-2">
                         <div class="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
-                            <span class="text-white font-bold text-sm"
-                                >{{ currentPlayer?.username.charAt(0).toUpperCase() }}</span>
+                            <span
+                                class="text-white font-bold text-sm">{{ currentPlayer?.username.charAt(0).toUpperCase() }}</span>
                         </div>
-                        <span class="text-lg font-semibold text-white"
-                            >{{ currentPlayer?.username }}'s Turn</span>
+                        <span class="text-lg font-semibold text-white">{{ currentPlayer?.username }}'s Turn</span>
                     </div>
-                    <p class="text-sm text-gray-400" >Tap the dice to roll</p>
+                    <p class="text-sm text-gray-400">Tap the dice to roll</p>
                 </div>
 
                 <Dice :canRoll="currentPlayer?.canRoll" @roll-finished="handleDiceRollFinished" />
@@ -34,12 +34,11 @@
                                 </svg></i>
                         </div>
                     </div>
-                    <h3 class="text-lg font-bold text-white mb-2" >Password Security</h3>
-                    <p class="text-sm text-gray-300 mb-4" >You landed on a Password Security
+                    <h3 class="text-lg font-bold text-white mb-2">Password Security</h3>
+                    <p class="text-sm text-gray-300 mb-4">You landed on a Password Security
                         question!</p>
                     <button
-                        class="w-full bg-password hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-                        >
+                        class="w-full bg-password hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
                         Answer Question
                     </button>
                 </div>
@@ -51,30 +50,30 @@
             <div class="max-w-sm mx-auto">
 
                 <div id="game-legend" class="mb-4 section-clickable">
-                    <h3 class="text-sm font-semibold text-white mb-3 text-center" >Categories
+                    <h3 class="text-sm font-semibold text-white mb-3 text-center">Categories
                     </h3>
                     <div class="grid grid-cols-2 gap-2">
                         <div class="flex items-center space-x-2 bg-gray-800 rounded-lg p-2">
                             <div class="w-4 h-4 rounded" :style="{ backgroundColor: colors.blue }"></div>
-                            <span class="text-xs text-gray-300" >Password</span>
+                            <span class="text-xs text-gray-300">Password</span>
                         </div>
                         <div class="flex items-center space-x-2 bg-gray-800 rounded-lg p-2">
                             <div class="w-4 h-4 rounded" :style="{ backgroundColor: colors.yellow }"></div>
-                            <span class="text-xs text-gray-300" >Phishing</span>
+                            <span class="text-xs text-gray-300">Phishing</span>
                         </div>
                         <div class="flex items-center space-x-2 bg-gray-800 rounded-lg p-2">
                             <div class="w-4 h-4 rounded" :style="{ backgroundColor: colors.green }"></div>
-                            <span class="text-xs text-gray-300" >Social Media</span>
+                            <span class="text-xs text-gray-300">Social Media</span>
                         </div>
                         <div class="flex items-center space-x-2 bg-gray-800 rounded-lg p-2">
                             <div class="w-4 h-4 rounded" :style="{ backgroundColor: colors.red }"></div>
-                            <span class="text-xs text-gray-300" >Cyber Risk</span>
+                            <span class="text-xs text-gray-300">Cyber Risk</span>
                         </div>
                     </div>
                 </div>
 
                 <div id="player-order" class="bg-gray-800 rounded-xl p-4 section-clickable">
-                    <h3 class="text-sm font-semibold text-white mb-3 flex items-center" >
+                    <h3 class="text-sm font-semibold text-white mb-3 flex items-center">
                         <i class="text-accent mr-2" data-fa-i2svg=""><svg class="svg-inline--fa fa-list-ol"
                                 aria-hidden="true" focusable="false" data-prefix="fas" data-icon="list-ol" role="img"
                                 xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-fa-i2svg="">
@@ -95,113 +94,131 @@
 
                     </div>
                 </div>
-
             </div>
         </footer>
 
+        <div
+            v-if="showQuizPopup"
+            class="fixed inset-0 z-50 flex items-center justify-center bg-[#111827]"
+        >
+            <QuizPopup
+                :question="question"
+
+                @close="handleCloseQuiz"
+            />
+        </div>
+
     </div>
+
 </template>
 
 
 <script setup>
 
-    import { onMounted, onUnmounted, ref, computed } from 'vue';
-    import { useToast } from 'vue-toast-notification';
-    import GamePlayerCard from '../components/GamePlayerCard.vue';
-    import { Head } from '@inertiajs/vue3';
-    import axios from 'axios';
-    const props = defineProps({
-        gamecode: {
-            type: String,
-        },
-        currentPlayerId: {
-            type: Number,
-            default: null,
-        },
+import axios from 'axios';
+import { onMounted, onUnmounted, ref, computed } from 'vue';
+import { useToast } from 'vue-toast-notification';
+import GamePlayerCard from '../components/GamePlayerCard.vue';
+import { Head } from '@inertiajs/vue3';
+import { colors } from '../utils/colors';
+import QuizPopup from '../components/QuizPopup.vue';
+import Dice from '../components/Dice.vue';
+const props = defineProps({
+    gamecode: {
+        type: String,
+    },
+    currentPlayerId: {
+        type: Number,
+        default: null,
+    },
+});
+
+
+
+const toast = useToast();
+const activePlayers = ref([]);
+const lastRollResult = ref(null);
+const currentPlayerId = ref(props.currentPlayerId ?? null);
+const currentPlayer = computed(() => activePlayers.value.find(player => player.id === currentPlayerId.value));
+
+// État de la popup de quiz
+const showQuizPopup = ref(true);
+const currentCategory = ref('password');
+
+
+const handleCloseQuiz = () => {
+    showQuizPopup.value = false;
+};
+
+const handleDiceRollFinished = (value) => {
+    lastRollResult.value = value;
+
+    axios.post(`/roll-dice/${props.gamecode}`, {
+        result: lastRollResult.value,
+        playerId: currentPlayerId.value,
+    }).then(response => {
+        console.log(response.data);
+        if (!response.data.success) {
+            toast.error(response.data.message);
+        }
+    }).catch(error => {
+        console.log(error);
     });
 
-    import Dice from '../components/Dice.vue';
-    import { colors } from '../utils/colors';
+};
 
-    const toast = useToast();
-    const activePlayers = ref([]);
-    const lastRollResult = ref(null);
-    const currentPlayerId = ref(props.currentPlayerId ?? null);
-    const currentPlayer = computed(() => activePlayers.value.find(player => player.id === currentPlayerId.value));
-    const handleDiceRollFinished = (value) => {
-        lastRollResult.value = value;
+onMounted(() => {
+    window.Echo.join(`game.${props.gamecode}`)
+        .here((users) => {
+            activePlayers.value = users;
+            question.value = users.find(player => player.id === currentPlayerId.value)?.question;
+        })
+        .joining((user) => {
+            activePlayers.value.push(user);
+            toast.info(`${user.username} has joined!`);
+        })
+        .leaving((user) => {
+            activePlayers.value = activePlayers.value.filter((p) => p.id !== user.id);
+            toast.error(`${user.username} has left.`);
+        })
+        .listen('.GameRealtimeEvent', (event) => {
+            if (event.type === 'currentPlayer' && event.data && event.data.player) {
+            } else if (event.type === 'rollDiceResult') {
+                let affectedPlayer = activePlayers.value.find(player => player.id === event.data.player_id);
+                let category = event.data.category;
+                if (affectedPlayer) {
+                    affectedPlayer.position = event.data.position;
+                }
+                toast.success(`${affectedPlayer?.username} has rolled a ${event.data.result}!`);
 
-        axios.post(`/roll-dice/${props.gamecode}`, {
-            result: lastRollResult.value,
-            playerId: currentPlayerId.value,
-        }).then(response => {
-            console.log(response.data);
-            if(!response.data.success) {
-                toast.error(response.data.message);
+                question.value = event.data.question;
+                currentCategory.value = category || 'password';
+                showQuizPopup.value = true;
             }
-        }).catch(error => {
-            console.log(error);
+        })
+        .listen('.CurrentPlayerUpdated', (event) => {
+            const updatedId = Number(event.userId);
+            if (event.is_current) {
+                currentPlayerId.value = updatedId;
+            } else if (currentPlayerId.value === updatedId) {
+                currentPlayerId.value = null;
+            }
         });
+});
 
-    };
-
-    onMounted(() => {
-        window.Echo.join(`game.${props.gamecode}`)
-            .here((users) => {
-                activePlayers.value = users;
-            })
-            .joining((user) => {
-                activePlayers.value.push(user);
-                toast.info(`${user.username} has joined!`);
-            })
-            .leaving((user) => {
-                activePlayers.value = activePlayers.value.filter((p) => p.id !== user.id);
-                toast.error(`${user.username} has left.`);
-            })
-            .listen('.GameRealtimeEvent', (event) => {
-                if (event.type === 'currentPlayer' && event.data && event.data.player) {
-                } else if (event.type === 'rollDiceResult') {
-                    let affectedPlayer = activePlayers.value.find(player => player.id === event.data.player_id);
-                    let category = event.data.category;
-                    if (affectedPlayer) {
-                        affectedPlayer.position = event.data.position;
-                    }
-                    console.log("called")
-                    toast.success(`${affectedPlayer?.username} has rolled a ${event.data.result}!`);
+onUnmounted(() => {
+    window.Echo.leave(`game.${props.gamecode}`);
+});
 
 
+const question = ref({});
 
-
-                    if (category === 'password') {
-                        // show password category card
-                    } else if (category === 'phishing') {
-                        // show phishing category card
-                    } else if (category === 'social_media') {
-                        // show social media category card
-                    } else if (category === 'cyber_risk') {
-                        // show cyber risk category card
-                    }
-
-
-
-
-
-                }
-            })
-            .listen('.CurrentPlayerUpdated', (event) => {
-                const updatedId = Number(event.userId);
-                if (event.is_current) {
-                    currentPlayerId.value = updatedId;
-                } else if (currentPlayerId.value === updatedId) {
-                    currentPlayerId.value = null;
-                }
-            });
-    });
-
-    onUnmounted(() => {
-        window.Echo.leave(`game.${props.gamecode}`);
-    });
+setInterval(() => {
+    console.log(question.value);
+}, 1000);
 
 
 
 </script>
+
+

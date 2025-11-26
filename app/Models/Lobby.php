@@ -27,6 +27,7 @@ class Lobby extends Model
 
         $this->forceFill(['is_started' => true])->save();
 
+
         broadcast(new GameStarted($this->gamecode));
     }
 }

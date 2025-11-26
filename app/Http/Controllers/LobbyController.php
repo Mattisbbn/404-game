@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\GameRealtimeEvent;
 use Illuminate\Http\Request;
 use App\Models\Lobby;
 use App\Models\Player;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Arr;
 
 
 class LobbyController extends Controller
@@ -53,10 +55,29 @@ class LobbyController extends Controller
         $playersReady = $players->where('status', 'ready')->count();
         if ($playersReady === $players->count() && $players->count() > 0) {
             $shuffledPlayers = $players->shuffle()->values();
+
             $shuffledPlayers->each(function (Player $lobbyPlayer, int $index) {
                 $lobbyPlayer->order = $index + 1;
+                $lobbyPlayer->is_current = false;
                 $lobbyPlayer->save();
             });
+
+            $firstPlayer = $shuffledPlayers->first();
+            if ($firstPlayer) {
+                $firstPlayer->is_current = true;
+                $firstPlayer->save();
+
+                broadcast(new GameRealtimeEvent(
+                    gamecode: $player->lobby->gamecode,
+                    type: 'currentPlayer',
+                    data: [
+                        'player' => Arr::only(
+                            $firstPlayer->toArray(),
+                            ['id', 'username', 'color', 'order', 'position', 'score']
+                        ),
+                    ],
+                ));
+            }
 
             $player->lobby->startGame();
         }
@@ -64,10 +85,5 @@ class LobbyController extends Controller
         return response()->json(['status' => $player->status]);
     }
 
-    // public function updatePlayerOrder(Request $request, $playerId)
-    // {
-    //     $player = Player::find($playerId);
-    //     $player->order = $request->get('order');
-    //     $player->save();
-    // }
+
 }

@@ -54,3 +54,5 @@ Route::get('/test-auth', function () {
         'model' => config('auth.providers.users.model'),
     ];
 });
+
+Route::post('/roll-dice', [GameController::class, 'rollDice'])->name('roll-dice');

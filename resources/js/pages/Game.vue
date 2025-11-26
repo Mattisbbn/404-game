@@ -106,10 +106,10 @@ import { colors } from '../utils/colors';
 
 const toast = useToast();
 const activePlayers = ref([]);
+const currentPlayerId = ref(); // Pour test
 
 onMounted(() => {
     window.Echo.join(`game.${props.gamecode}`)
-
         .here((users) => {
             activePlayers.value = users;
         })
@@ -121,18 +121,14 @@ onMounted(() => {
             activePlayers.value = activePlayers.value.filter((p) => p.id !== user.id);
             toast.error(`${user.username} has left.`);
         })
-        // .listen('.PlayerStatusUpdated', (e) => {
-
-        //     const playerIndex = activePlayers.value.findIndex((p) => p.id === e.userId);
-        //     if (playerIndex !== -1) {
-        //         activePlayers.value[playerIndex].status = e.status;
-        //     }
-
-        //     // Si c'est MOI qui ai changé (via une confirmation serveur), on met à jour mon bouton
-        //     if (e.userId === props.playerId) {
-        //         status.value = e.status;
-        //     }
-        // });
+        .listen('.GameRealtimeEvent', (event) => {
+            if (event.type === 'currentPlayer' && event.data && event.data.player) {
+                const playerIndex = activePlayers.value.findIndex((p) => p.id === event.data.player.id);
+                if (playerIndex !== -1) {
+                    currentPlayerId.value = event.data.player.id;
+                }
+            }
+        });
 });
 
 onUnmounted(() => {

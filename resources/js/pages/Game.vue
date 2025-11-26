@@ -1,24 +1,19 @@
 <template>
-
     <Head :title="`Game ${gamecode}`"></Head>
-    <div class="flex flex-col h-screen cursor-default-must">
-
+    <div class="flex flex-col min-h-dvh cursor-default-must">
         <section id="dice-section" class="flex-1 flex items-center justify-center px-6 py-8 section-clickable">
             <div class="text-center max-w-sm mx-auto">
-
                 <div id="current-player" class="mb-6 section-clickable">
                     <div class="flex items-center justify-center space-x-2 mb-2">
                         <div class="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
-                            <span
-                                class="text-white font-bold text-sm">{{ currentPlayer?.username.charAt(0).toUpperCase() }}</span>
+                            <span class="text-white font-bold text-sm">{{ currentPlayer?.username.charAt(0).toUpperCase() }}</span>
                         </div>
                         <span class="text-lg font-semibold text-white">{{ currentPlayer?.username }}'s Turn</span>
                     </div>
                     <p class="text-sm text-gray-400">Tap the dice to roll</p>
                 </div>
 
-                <Dice :canRoll="currentPlayer?.canRoll" @roll-finished="handleDiceRollFinished" />
-
+                <Dice :canRoll="currentPlayer?.canRoll && currentPlayerId === props.playerId" @roll-finished="handleDiceRollFinished" />
 
                 <div id="category-card"
                     class="bg-gradient-to-r from-password/20 to-password/5 border-2 border-password rounded-xl p-6 hidden section-clickable">
@@ -84,14 +79,9 @@
                         Player Order
                     </h3>
                     <div class="space-y-2">
-
-
-
                         <GamePlayerCard v-for="player in activePlayers" :key="player.id" :username="player.username"
                             :position="player.position" :color="player.color" :player-id="currentPlayerId"
                             :id="player.id" :score="player.score" :order="player.order" />
-
-
                     </div>
                 </div>
             </div>
@@ -105,9 +95,7 @@
 
 </template>
 
-
 <script setup>
-
 import axios from 'axios';
 import { onMounted, onUnmounted, ref, computed } from 'vue';
 import { useToast } from 'vue-toast-notification';
@@ -116,6 +104,7 @@ import { Head } from '@inertiajs/vue3';
 import { colors } from '../utils/colors';
 import QuizPopup from '../components/QuizPopup.vue';
 import Dice from '../components/Dice.vue';
+
 const props = defineProps({
     gamecode: {
         type: String,
@@ -124,43 +113,50 @@ const props = defineProps({
         type: Number,
         default: null,
     },
+    playerId: {
+        type: Number,
+        default: null,
+    },
 });
+
+const toast = useToast();
+const activePlayers = ref([]);
+const currentPlayerId = ref(props.currentPlayerId ?? null);
+const currentPlayer = computed(() => activePlayers.value.find(player => player.id === currentPlayerId.value));
+const showQuizPopup = ref(false);
+const question = ref({});
 
 
 const handleSubmitQuiz = (answer) => {
     axios.post(`/answer-question/${props.gamecode}`, {
         answer: answer,
         questionId: question.value.id,
-        playerId: currentPlayerId.value,
+        playerId: props.playerId,
     }).then(response => {
-        console.log(response.data);
+        if (!response.data.success) {
+            toast.error(response.data.message);
+        } else {
+            showQuizPopup.value = false;
+            if(response.data.question) {
+                question.value = response.data.question;
+            }
+            if(response.data.isCorrect) {
+                toast.success('Correct answer!');
+            } else {
+                toast.error('Wrong answer!');
+            }
+        }
     });
 };
-
-const toast = useToast();
-const activePlayers = ref([]);
-const lastRollResult = ref(null);
-const currentPlayerId = ref(props.currentPlayerId ?? null);
-const currentPlayer = computed(() => activePlayers.value.find(player => player.id === currentPlayerId.value));
-const user = ref('');
-
-
-
-// État de la popup de quiz
-const showQuizPopup = ref(false);
-const currentCategory = ref('password');
-
 
 const handleCloseQuiz = () => {
     showQuizPopup.value = false;
 };
 
 const handleDiceRollFinished = (value) => {
-    lastRollResult.value = value;
-
     axios.post(`/roll-dice/${props.gamecode}`, {
-        result: lastRollResult.value,
-        playerId: currentPlayerId.value,
+        result: value,
+        playerId: props.playerId,
     }).then(response => {
         console.log(response.data);
         if (!response.data.success) {
@@ -169,17 +165,13 @@ const handleDiceRollFinished = (value) => {
     }).catch(error => {
         console.log(error);
     });
-
 };
 
 onMounted(() => {
     window.Echo.join(`game.${props.gamecode}`)
-        .here((user) => {
-            user.value = user;
-
-            activePlayers.value = user;
-            question.value = user.find(player => player.id === currentPlayerId.value)?.question;
-
+        .here((users) => {
+            activePlayers.value = users;
+            question.value = users.find(player => player.id === currentPlayerId.value)?.question;
         })
         .joining((user) => {
             activePlayers.value.push(user);
@@ -190,21 +182,39 @@ onMounted(() => {
             toast.error(`${user.username} has left.`);
         })
         .listen('.GameRealtimeEvent', (event) => {
-            if (event.type === 'currentPlayer' && event.data && event.data.player) {
-            } else if (event.type === 'rollDiceResult') {
-                let affectedPlayer = activePlayers.value.find(player => player.id === event.data.player_id);
-                let category = event.data.category;
+            if (event.type === 'rollDiceResult') {
+                const affectedPlayer = activePlayers.value.find(player => player.id === event.data.player_id);
                 if (affectedPlayer) {
                     affectedPlayer.position = event.data.position;
                 }
+                // Mettre à jour canRoll pour tous les joueurs
+                if (event.data.canRoll !== undefined) {
+                    activePlayers.value.forEach(player => {
+                        player.canRoll = event.data.canRoll;
+                    });
+                }
                 toast.success(`${affectedPlayer?.username} has rolled a ${event.data.result}!`);
-
-                question.value = event.data.question;
-                currentCategory.value = category || 'password';
-                showQuizPopup.value = true;
+            } else if (event.type === 'question') {
+                // Afficher le quiz uniquement pour le joueur concerné
+                if (event.data.player_id === props.playerId) {
+                    question.value = event.data.question;
+                    showQuizPopup.value = true;
+                }
+            } else if (event.type === 'questionAnsweredResult') {
+                const affectedPlayer = activePlayers.value.find(player => player.id === event.data.player_id);
+                if (affectedPlayer) {
+                    affectedPlayer.score = event.data.score;
+                }
+                // Réactiver canRoll pour tous les joueurs après avoir répondu
+                if (event.data.canRoll !== undefined) {
+                    activePlayers.value.forEach(player => {
+                        player.canRoll = event.data.canRoll;
+                    });
+                }
             }
         })
         .listen('.CurrentPlayerUpdated', (event) => {
+            console.log(event);
             const updatedId = Number(event.userId);
             if (event.is_current) {
                 currentPlayerId.value = updatedId;
@@ -217,7 +227,4 @@ onMounted(() => {
 onUnmounted(() => {
     window.Echo.leave(`game.${props.gamecode}`);
 });
-
-const question = ref({});
-
 </script>

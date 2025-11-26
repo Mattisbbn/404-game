@@ -39,16 +39,17 @@
             </div>
         </section>
     </main>
+
 </template>
 
 <script setup>
-import logo from '../../img/logo.svg';
+    import logo from '../../img/logo.svg';
 
-import { Icon } from '@iconify/vue';
-import { Head, useForm } from '@inertiajs/vue3';
-import Input from '../components/Input.vue';
-const form = useForm({
-    username: '',
-    gamecode: '',
-});
+    import { Icon } from '@iconify/vue';
+    import { Head, useForm } from '@inertiajs/vue3';
+    import Input from '../components/Input.vue';
+    const form = useForm({
+        username: '',
+        gamecode: '',
+    });
 </script>

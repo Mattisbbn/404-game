@@ -23,16 +23,27 @@ class LobbyController extends Controller
 
         $lobby = Lobby::firstOrCreate(['gamecode' => $gamecode]);
 
-        $player = Player::create([
-            'username' => $username,
-            'lobby_id' => $lobby->id,
-            'status' => 'waiting',
-            'color' => $colors[array_rand($colors)],
-            'score' => 0,
-            'position' => 0,
-            'order' => 0,
-        ]);
+        // Vérifier si un joueur avec ce username existe déjà dans ce lobby
+        $player = Player::where('lobby_id', $lobby->id)
+            ->where('username', $username)
+            ->first();
 
+        if ($player) {
+            // Réutiliser le joueur existant et réinitialiser son status
+            $player->status = 'waiting';
+            $player->save();
+        } else {
+            // Créer un nouveau joueur
+            $player = Player::create([
+                'username' => $username,
+                'lobby_id' => $lobby->id,
+                'status' => 'waiting',
+                'color' => $colors[array_rand($colors)],
+                'score' => 0,
+                'position' => 0,
+                'order' => 0,
+            ]);
+        }
 
         $playerId = $player->id;
 

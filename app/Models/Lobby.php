@@ -25,8 +25,12 @@ class Lobby extends Model
             return;
         }
 
-        $this->forceFill(['is_started' => true])->save();
+        // Supprimer tous les joueurs qui ne sont pas ready
+        $this->players()
+            ->where('status', '!=', 'ready')
+            ->delete();
 
+        $this->forceFill(['is_started' => true])->save();
 
         broadcast(new GameStarted($this->gamecode));
     }

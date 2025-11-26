@@ -21,7 +21,7 @@ Broadcast::channel('game.{gamecode}', function ($user, $gamecode) {
         'position' => $user->position,
         'order' => $user->order,
         'score' => $user->score,
-        'canRoll' => $user->canRoll,
+        'canRoll' => (bool) $user->canRoll,
         'question' => $user->question,
     ];
 }

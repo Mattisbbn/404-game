@@ -32,6 +32,7 @@ class GameController extends Controller
         return Inertia::render('Game', [
             'gamecode' => $gamecode,
             'currentPlayerId' => $currentPlayer?->id,
+            'playerId' => $playerId,
         ]);
     }
 
@@ -63,10 +64,13 @@ class GameController extends Controller
         if (!$player) {
             return response()->json(['success' => false, 'message' => 'Player not found']);
         }
+
+        // Vérifier que c'est le tour du joueur
         if(!$player->is_current) {
             return response()->json(['success' => false, 'message' => 'Not your turn']);
         }
 
+        // Vérifier si le joueur a déjà lancé
         if(!$player->canRoll) {
             return response()->json(['success' => false, 'message' => 'You have already rolled the dice']);
         }
@@ -79,8 +83,10 @@ class GameController extends Controller
         $player->position = $totalSteps % $boardSize;
 
         $gameboard = Gameboard::where('position', $player->position)->first();
-        $player->canRoll = false;
-        $player->save();
+
+        // Désactiver canRoll pour TOUS les joueurs
+        Player::where('lobby_id', $lobby->id)->update(['canRoll' => false]);
+
         broadcast(event: new GameRealtimeEvent(
             gamecode: $gamecode,
             type: 'rollDiceResult',
@@ -89,6 +95,7 @@ class GameController extends Controller
                 'result' => $result,
                 'category' => $gameboard->category,
                 'position' => $player->position,
+                'canRoll' => false, // Indiquer que plus personne ne peut lancer
             ],
         ));
 
@@ -109,6 +116,50 @@ class GameController extends Controller
                     'question' => $player->question,
             ],
         ));
+
+        // Désigner le prochain joueur
+        $allPlayers = Player::where('lobby_id', $lobby->id)
+            ->where('order', '>', 0)
+            ->orderBy('order')
+            ->get();
+
+        if ($allPlayers->count() > 1) {
+            // Retirer is_current du joueur actuel
+            $player->is_current = false;
+            $player->save();
+            broadcast(new \App\Events\CurrentPlayerUpdated(
+                userId: $player->id,
+                gamecode: $gamecode,
+                isCurrent: false,
+            ));
+
+            // Trouver le prochain joueur selon l'ordre
+            $currentOrder = $player->order;
+            $nextPlayer = $allPlayers->firstWhere('order', '>', $currentOrder);
+
+            // Si aucun joueur avec un ordre supérieur, prendre le premier (boucle)
+            if (!$nextPlayer) {
+                $nextPlayer = $allPlayers->first();
+            }
+
+            // Désigner le prochain joueur
+            $nextPlayer->is_current = true;
+            $nextPlayer->save();
+            broadcast(new \App\Events\CurrentPlayerUpdated(
+                userId: $nextPlayer->id,
+                gamecode: $gamecode,
+                isCurrent: true,
+            ));
+        } else {
+            // Si un seul joueur, le garder comme joueur courant
+            $player->is_current = true;
+            $player->save();
+            broadcast(new \App\Events\CurrentPlayerUpdated(
+                userId: $player->id,
+                gamecode: $gamecode,
+                isCurrent: true,
+            ));
+        }
 
         return response()->json(['success' => true, 'question' => $question]);
     }
@@ -136,36 +187,38 @@ class GameController extends Controller
             return response()->json(['success' => false, 'message' => 'Question not found']);
         }
         $selectedAnswerEntry = collect($question->answers)->firstWhere('letter', $user_answer);
-        $correct_answer = (bool) ($selectedAnswerEntry['isCorrect'] ?? false);
+        $isCorrect = (bool) ($selectedAnswerEntry['isCorrect'] ?? false);
 
-        if ($correct_answer) {
+        if ($isCorrect) {
             $player->score += (int) $question->points;
         }
         $player->current_question_id = null;
-        $player->canRoll = true;
-        $player->is_current = false;
         $player->save();
+
+        // Réactiver canRoll pour TOUS les joueurs après avoir répondu
+        Player::where('lobby_id', $lobby->id)->update(['canRoll' => true]);
         broadcast(event: new GameRealtimeEvent(
             gamecode: $gamecode,
             type: 'questionAnsweredResult',
             data: [
                 'player_id' => $player->id,
                 'question' => $player->question,
-                'correct_answer' => $correct_answer,
+                'isCorrect' => $isCorrect,
+                'score' => $player->score,
+                'canRoll' => true, // Indiquer que tout le monde peut relancer
             ],
         ));
 
 
 
 
+
         return response()->json([
             'success' => true,
-            'message' => 'Question answered correctly',
-            'correct_answer' => $correct_answer ?? '',
+            'isCorrect' => $isCorrect,
             'question' => $player->question,
             'answer' => $user_answer,
-            'player' => $player,
-            'lobby' => $lobby,
+            'playerId' => $playerId,
         ]);
     }
 }

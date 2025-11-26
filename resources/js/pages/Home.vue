@@ -2,7 +2,7 @@
 
     <Head title="Homepage"></Head>
 
-    <main class="cursor-default-must flex h-screen flex-col">
+    <main class="cursor-default-must flex min-h-dvh flex-col">
         <section id="hero-section" class="section-clickable flex flex-1 flex-col justify-center px-6">
             <div class="mx-auto w-full max-w-sm">
                 <div id="logo-area" class="section-clickable mb-6 text-center">

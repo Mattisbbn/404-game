@@ -55,4 +55,4 @@ Route::get('/test-auth', function () {
     ];
 });
 
-Route::post('/roll-dice', [GameController::class, 'rollDice'])->name('roll-dice');
+Route::post('/roll-dice/{gamecode}', [GameController::class, 'rollDice'])->name('roll-dice');

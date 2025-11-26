@@ -43,7 +43,7 @@
       <div class="shadow-platform"></div>
     </div>
 
-    <button  class="roll-button" type="button" @click="rollDice">
+    <button  class="roll-button" type="button" @click="rollDice" :disabled="!canRoll">
       <i class="fas fa-dice"></i>
       <span>Roll the dice</span>
     </button>
@@ -65,8 +65,13 @@ import { computed, onBeforeUnmount, ref } from 'vue';
 
 import advancedCyberRisk from '../../img/acr.png';
 
-
-
+const emit = defineEmits(['roll-finished']);
+const props = defineProps({
+  canRoll: {
+    type: Boolean,
+    default: true,
+  },
+});
 const rotation = ref({ x: 0, y: 0 });
 const isRolling = ref(false);
 const isResultVisible = ref(false);
@@ -89,7 +94,7 @@ const cubeTransform = computed(
 let rollTimeout;
 
 const rollDice = () => {
-  if (isRolling.value) {
+  if (isRolling.value || !props.canRoll) {
     return;
   }
 
@@ -113,6 +118,7 @@ const rollDice = () => {
       ? 'Result : (Advanced Cyber-Risk !)'
       : `Result : ${result}`;
     isResultVisible.value = true;
+    emit('roll-finished', result);
   }, 5000);
 };
 

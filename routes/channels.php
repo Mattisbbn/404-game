@@ -20,6 +20,8 @@ Broadcast::channel('game.{gamecode}', function ($user, $gamecode) {
         'color' => $user->color,
         'position' => $user->position,
         'order' => $user->order,
+        'score' => $user->score,
+        'canRoll' => $user->canRoll,
     ];
 }
 );

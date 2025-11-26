@@ -7,6 +7,7 @@ use App\Models\Lobby;
 use Inertia\Inertia;
 use App\Models\Player;
 use App\Events\GameRealtimeEvent;
+use App\Models\Gameboard;
 class GameController extends Controller
 {
     public function show(string $gamecode)
@@ -23,8 +24,13 @@ class GameController extends Controller
         }
         $status = Player::where('id', $playerId)->first()->status;
 
+        $currentPlayer = Player::where('lobby_id', $lobby->id)
+            ->where('is_current', true)
+            ->first();
+
         return Inertia::render('Game', [
             'gamecode' => $gamecode,
+            'currentPlayerId' => $currentPlayer?->id,
         ]);
     }
 
@@ -34,31 +40,60 @@ class GameController extends Controller
         $player = Player::find($playerId);
         $player->is_current = !$player->is_current;
         $player->save();
-        broadcast(new \App\Events\CurrentPlayerUpdated($playerId, $gamecode));
+        broadcast(new \App\Events\CurrentPlayerUpdated(
+            userId: $playerId,
+            gamecode: $gamecode,
+            isCurrent: $player->is_current,
+        ));
         return response()->json(['success' => true, 'is_current' => $player->is_current]);
     }
 
     public function rollDice(Request $request, $gamecode)
     {
-        $result = $request->get('result');
-        $playerId = session('player_id');
+        $result = $request->get(key: 'result');
+        $playerId = $request->get('playerId');
+        $lobby = Lobby::where('gamecode', $gamecode)->first();
+        if (!$lobby) {
+            return response()->json(['success' => false, 'message' => 'Lobby not found']);
+        }
+
         $player = Player::find($playerId);
+
         if (!$player) {
             return response()->json(['success' => false, 'message' => 'Player not found']);
         }
         if(!$player->is_current) {
             return response()->json(['success' => false, 'message' => 'Not your turn']);
         }
-        $player->position += $result;
+
+        if(!$player->canRoll) {
+            return response()->json(['success' => false, 'message' => 'You have already rolled the dice']);
+        }
+
+        // Plateau circulaire : si on dépasse la dernière case, on repart de 0 avec le reste des pas
+        $maxPosition = Gameboard::max('position');   // ex : positions 0..33
+        $boardSize   = $maxPosition + 1;             // nombre total de cases
+
+        $totalSteps = $player->position + $result;
+        $player->position = $totalSteps % $boardSize;
+
+        $gameboard = Gameboard::where('position', $player->position)->first();
+        $player->canRoll = false;
         $player->save();
         broadcast(event: new GameRealtimeEvent(
             gamecode: $gamecode,
             type: 'rollDiceResult',
             data: [
+                'player_id' => $player->id,
                 'result' => $result,
+                'category' => $gameboard->category,
                 'position' => $player->position,
             ],
         ));
-        return response()->json(['success' => true, 'position' => $player->position]);
+
+
+
+
+        return response()->json(['success' => true]);
     }
 }

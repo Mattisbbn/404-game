@@ -16,14 +16,16 @@ class CurrentPlayerUpdated implements ShouldBroadcastNow
 
     public $userId;
     public $gamecode;
+    public bool $isCurrent;
 
     /**
      * Create a new event instance.
      */
-    public function __construct($userId, $gamecode)
+    public function __construct($userId, $gamecode, bool $isCurrent)
     {
         $this->userId = $userId;
         $this->gamecode = $gamecode;
+        $this->isCurrent = $isCurrent;
     }
 
     /**
@@ -48,6 +50,7 @@ class CurrentPlayerUpdated implements ShouldBroadcastNow
         return [
             'userId' => $this->userId,
             'gamecode' => $this->gamecode,
+            'is_current' => $this->isCurrent,
         ];
     }
 }

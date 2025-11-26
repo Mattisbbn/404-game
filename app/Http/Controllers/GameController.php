@@ -113,5 +113,59 @@ class GameController extends Controller
         return response()->json(['success' => true, 'question' => $question]);
     }
 
+    public function answerQuestion(Request $request, $gamecode)
+    {
+        $user_answer = $request->get('answer');
+        $questionId = $request->get('questionId');
+        $playerId = $request->get('playerId');
 
+        $lobby = Lobby::where('gamecode', $gamecode)->first();
+
+        if (!$lobby) {
+            return response()->json(['success' => false, 'message' => 'Lobby not found']);
+        }
+
+        $player = Player::find($playerId);
+
+        if (!$player) {
+            return response()->json(['success' => false, 'message' => 'Player not found']);
+        }
+
+        $question = Question::find($questionId);
+        if (!$question) {
+            return response()->json(['success' => false, 'message' => 'Question not found']);
+        }
+        $selectedAnswerEntry = collect($question->answers)->firstWhere('letter', $user_answer);
+        $correct_answer = (bool) ($selectedAnswerEntry['isCorrect'] ?? false);
+
+        if ($correct_answer) {
+            $player->score += (int) $question->points;
+        }
+        $player->current_question_id = null;
+        $player->canRoll = true;
+        $player->is_current = false;
+        $player->save();
+        broadcast(event: new GameRealtimeEvent(
+            gamecode: $gamecode,
+            type: 'questionAnsweredResult',
+            data: [
+                'player_id' => $player->id,
+                'question' => $player->question,
+                'correct_answer' => $correct_answer,
+            ],
+        ));
+
+
+
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Question answered correctly',
+            'correct_answer' => $correct_answer ?? '',
+            'question' => $player->question,
+            'answer' => $user_answer,
+            'player' => $player,
+            'lobby' => $lobby,
+        ]);
+    }
 }

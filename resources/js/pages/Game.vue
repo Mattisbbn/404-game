@@ -97,15 +97,8 @@
             </div>
         </footer>
 
-        <div
-            v-if="showQuizPopup"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-[#111827]"
-        >
-            <QuizPopup
-                :question="question"
-
-                @close="handleCloseQuiz"
-            />
+        <div v-if="showQuizPopup" class="fixed inset-0 z-50 flex items-center justify-center bg-[#111827]">
+            <QuizPopup :question="question" @close="handleCloseQuiz" @submit="handleSubmitQuiz" />
         </div>
 
     </div>
@@ -134,15 +127,27 @@ const props = defineProps({
 });
 
 
+const handleSubmitQuiz = (answer) => {
+    axios.post(`/answer-question/${props.gamecode}`, {
+        answer: answer,
+        questionId: question.value.id,
+        playerId: currentPlayerId.value,
+    }).then(response => {
+        console.log(response.data);
+    });
+};
 
 const toast = useToast();
 const activePlayers = ref([]);
 const lastRollResult = ref(null);
 const currentPlayerId = ref(props.currentPlayerId ?? null);
 const currentPlayer = computed(() => activePlayers.value.find(player => player.id === currentPlayerId.value));
+const user = ref('');
+
+
 
 // État de la popup de quiz
-const showQuizPopup = ref(true);
+const showQuizPopup = ref(false);
 const currentCategory = ref('password');
 
 
@@ -169,9 +174,12 @@ const handleDiceRollFinished = (value) => {
 
 onMounted(() => {
     window.Echo.join(`game.${props.gamecode}`)
-        .here((users) => {
-            activePlayers.value = users;
-            question.value = users.find(player => player.id === currentPlayerId.value)?.question;
+        .here((user) => {
+            user.value = user;
+
+            activePlayers.value = user;
+            question.value = user.find(player => player.id === currentPlayerId.value)?.question;
+
         })
         .joining((user) => {
             activePlayers.value.push(user);
@@ -210,15 +218,6 @@ onUnmounted(() => {
     window.Echo.leave(`game.${props.gamecode}`);
 });
 
-
 const question = ref({});
 
-setInterval(() => {
-    console.log(question.value);
-}, 1000);
-
-
-
 </script>
-
-

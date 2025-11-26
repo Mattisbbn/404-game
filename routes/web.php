@@ -56,3 +56,4 @@ Route::get('/test-auth', function () {
 });
 
 Route::post('/roll-dice/{gamecode}', [GameController::class, 'rollDice'])->name('roll-dice');
+Route::post('/answer-question/{gamecode}', [GameController::class, 'answerQuestion'])->name('answer-question');

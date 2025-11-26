@@ -16,7 +16,10 @@ Broadcast::channel('game.{gamecode}', function ($user, $gamecode) {
     return [
         'id' => $user->id,
         'username' => $user->username,
-        'status' => 'waiting'
+        'status' => 'waiting',
+        'color' => $user->color,
+        'position' => $user->position,
+        'order' => $user->order,
     ];
 }
 );

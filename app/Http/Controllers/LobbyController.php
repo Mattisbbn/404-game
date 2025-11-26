@@ -27,6 +27,8 @@ class LobbyController extends Controller
             'status' => 'waiting',
             'color' => $colors[array_rand($colors)],
             'score' => 0,
+            'position' => 0,
+            'order' => 0,
         ]);
 
 
@@ -48,4 +50,11 @@ class LobbyController extends Controller
 
         return response()->json(['status' => $player->status]);
     }
+
+    // public function updatePlayerOrder(Request $request, $playerId)
+    // {
+    //     $player = Player::find($playerId);
+    //     $player->order = $request->get('order');
+    //     $player->save();
+    // }
 }

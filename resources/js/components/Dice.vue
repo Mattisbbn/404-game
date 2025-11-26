@@ -32,10 +32,10 @@
 
         <div class="face face-6">
           <img
-            v-if="customImage"
-            :src="customImage"
+            v-if="advancedCyberRisk"
+            :src="advancedCyberRisk"
             class="custom-img"
-            alt="Face personnalisée"
+            alt="ADVANCED CYBER-RISK"
           />
           <i v-else class="fas fa-star default-icon"></i>
         </div>
@@ -43,9 +43,9 @@
       <div class="shadow-platform"></div>
     </div>
 
-    <button class="roll-button" type="button" @click="rollDice">
+    <button  class="roll-button" type="button" @click="rollDice">
       <i class="fas fa-dice"></i>
-      <span>Lancer le dé (5s)</span>
+      <span>Roll the dice</span>
     </button>
 
     <p
@@ -63,12 +63,9 @@
 <script setup>
 import { computed, onBeforeUnmount, ref } from 'vue';
 
-const props = defineProps({
-  customImage: {
-    type: String,
-    default: '',
-  },
-});
+import advancedCyberRisk from '../../img/acr.png';
+
+
 
 const rotation = ref({ x: 0, y: 0 });
 const isRolling = ref(false);
@@ -113,8 +110,8 @@ const rollDice = () => {
     isRolling.value = false;
     isCustomResult.value = result === 6;
     resultLabel.value = result === 6
-      ? 'Résultat : 6 (Face personnalisée !)'
-      : `Résultat : ${result}`;
+      ? 'Result : (Advanced Cyber-Risk !)'
+      : `Result : ${result}`;
     isResultVisible.value = true;
   }, 5000);
 };
@@ -127,7 +124,8 @@ onBeforeUnmount(() => {
 <style scoped>
 .dice-container {
   --dice-size: 120px;
-  --core-size: 118px;
+  --core-size: 119.5px;
+  --dice-radius: 20px;
   --dice-color: #f3f4f6;
   --dot-color: #1f2937;
   --anim-duration: 5s;
@@ -161,10 +159,10 @@ onBeforeUnmount(() => {
   width: var(--core-size);
   height: var(--core-size);
   background: var(--dice-color);
+  border-radius: var(--dice-radius);
   top: 50%;
   left: 50%;
   transform-origin: center;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 }
 
 .core-1 {
@@ -197,7 +195,7 @@ onBeforeUnmount(() => {
   height: var(--dice-size);
   background: var(--dice-color);
   border: 1px solid #d1d5db;
-  border-radius: 12px;
+  border-radius: var(--dice-radius);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
@@ -310,7 +308,8 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 10px;
+
+  border-radius: var(--dice-radius);
 }
 
 .default-icon {
@@ -356,6 +355,11 @@ onBeforeUnmount(() => {
   background-color: #334155;
 }
 
+.roll-button:disabled {
+  background-color: #64748b;
+  cursor: not-allowed;
+}
+
 .result-text {
   min-height: 1.5rem;
   font-weight: 600;
@@ -372,4 +376,6 @@ onBeforeUnmount(() => {
   color: #4f46e5;
 }
 </style>
+
+
 

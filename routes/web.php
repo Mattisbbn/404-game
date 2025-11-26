@@ -6,7 +6,7 @@ use App\Http\Controllers\LobbyController;
 use App\Models\Lobby;
 use App\Models\Player;
 use Illuminate\Support\Facades\Auth;
-
+use App\Http\Controllers\GameController;
 Route::get('/', function () {
     return Inertia::render('Home');
 })->name('home');
@@ -36,14 +36,14 @@ Route::get('/lobby/{gamecode}', function (string $gamecode) {
 
     return Inertia::render('Lobby', [
         'gamecode' => $gamecode,
-        'players' => $players,
+
         'playerId' => $playerId,
         'status' => $status,
     ]);
 })->name('lobby.show');
 
+Route::get('/game/{gamecode}', [GameController::class, 'show'])->name('game.show');
 Route::post('/update-player-status/{playerId}', [LobbyController::class, 'updatePlayerStatus'])->name('update-player-status');
-
 Route::get('/test-auth', function () {
     return [
         'user' => Auth::user(),

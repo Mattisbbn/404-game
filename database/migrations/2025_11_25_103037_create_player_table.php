@@ -19,6 +19,9 @@ return new class extends Migration
             $table->integer('score')->default(0);
             $table->string('status')->default('waiting');
             $table->string('color')->default('purple');
+            $table->integer('order')->default(0);
+            $table->integer('position')->default(0);
+            $table->boolean('is_current')->default(false);
         });
     }
 

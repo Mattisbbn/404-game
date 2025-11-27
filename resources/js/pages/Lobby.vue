@@ -1,6 +1,6 @@
 <template>
     <main class="min-h-dvh px-6 py-6">
-        <div class="mx-auto max-w-sm">
+        <div class="mx-auto max-w-lg">
             <div class="mb-8 text-center">
                 <div class="mb-4 inline-flex items-center space-x-2 rounded-full bg-gray-800 px-6 py-3">
                     <Icon icon="mdi:hashtag" class="text-accent text-2xl text-[#39b54a]" />

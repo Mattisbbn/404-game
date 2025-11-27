@@ -9,6 +9,7 @@ use App\Models\Player;
 use App\Events\GameRealtimeEvent;
 use App\Models\Gameboard;
 use App\Models\Question;
+use Exception;
 class GameController extends Controller
 {
     public function show(string $gamecode)
@@ -52,195 +53,78 @@ class GameController extends Controller
 
     public function rollDice(Request $request, $gamecode)
     {
-        $result = $request->get(key: 'result');
-        $playerId = $request->get('playerId');
-        $lobby = Lobby::where('gamecode', $gamecode)->first();
-        if (!$lobby) {
-            return response()->json(['success' => false, 'message' => 'Lobby not found']);
-        }
-
-        $player = Player::find($playerId);
-
-        if (!$player) {
-            return response()->json(['success' => false, 'message' => 'Player not found']);
-        }
-
-        $hasCurrentPlayer = Player::where('lobby_id', $lobby->id)
-            ->where('is_current', true)
-            ->exists();
-
-        // Vérifier que c'est le tour du joueur
-        if(!$player->is_current) {
-            // Si personne n'est désigné comme joueur courant (ex : partie solo), on le définit
-            if(!$hasCurrentPlayer) {
-                $player->is_current = true;
-                $player->save();
-                broadcast(new \App\Events\CurrentPlayerUpdated(
-                    userId: $player->id,
-                    gamecode: $gamecode,
-                    isCurrent: true,
-                ));
-            } else {
-                return response()->json(['success' => false, 'message' => 'Not your turn']);
-            }
-        }
-
-        // Vérifier si le joueur a déjà lancé
-        if(!$player->canRoll) {
-            return response()->json(['success' => false, 'message' => 'You have already rolled the dice']);
-        }
-
-
-        $category = null;
-        $currentPosition = $player->position;
-        $requiresQuestion = true;
-        $scoreUpdated = false;
         $question = null;
-        $skippingPrisonTurn = false;
-        $bonusAwarded = false;
-        $malusApplied = false;
 
-        if ($player->prison_turns > 0) {
-            // Le joueur est en prison : il ne bouge pas et ne reçoit pas de question
-            $player->prison_turns -= 1;
-            $skippingPrisonTurn = true;
-            $category = 'prison';
-            $requiresQuestion = false;
-        } else {
-            if ((int) $result === 6) {
-                // Si le joueur fait 6, il reste sur place et obtient une question Cyber Risk
-                $category = 'cyber_risk';
-                $gameboard = null;
-            } else {
-                $maxPosition = Gameboard::max('position');
-                $boardSize   = $maxPosition + 1;
+        try {
+            $result = $request->get(key: 'result');
+            $playerId = $request->get('playerId');
+            $lobby = Lobby::where('gamecode', $gamecode)->first();
 
-                $totalSteps = $player->position + $result;
-                $player->position = $totalSteps % $boardSize;
-                $currentPosition = $player->position;
-
-                $gameboard = Gameboard::where('position', $player->position)->first();
-                $category = $gameboard?->category ?? 'password';
+            if (!$lobby) {
+                throw new Exception('Lobby not found');
             }
 
-            switch ($category) {
-                case 'bonus':
-                    $player->score += 2;
-                    $scoreUpdated = true;
-                    $requiresQuestion = false;
-                    $bonusAwarded = true;
-                    break;
-                case 'malus':
-                    $player->score = max(0, $player->score - 2);
-                    $scoreUpdated = true;
-                    $requiresQuestion = false;
-                    $malusApplied = true;
-                    break;
-                case 'prison':
-                    $player->prison_turns = 1;
-                    $requiresQuestion = false;
-                    break;
-                case '':
-                case null:
-                    $requiresQuestion = false;
-                    break;
-            }
-        }
+            $player = Player::find($playerId);
 
-        if (!$requiresQuestion) {
-            $player->current_question_id = null;
-        }
-
-        $player->save();
-
-        $nextCanRollState = $requiresQuestion ? false : true;
-
-        // Mettre à jour canRoll pour tous les joueurs
-        Player::where('lobby_id', $lobby->id)->update(['canRoll' => $nextCanRollState]);
-
-        $rollDicePayload = [
-            'player_id' => $player->id,
-            'result' => $result,
-            'category' => $category,
-            'position' => $currentPosition,
-            'canRoll' => $nextCanRollState,
-            'prison_turns' => $player->prison_turns,
-            'requiresQuestion' => $requiresQuestion,
-            'bonus' => $bonusAwarded,
-            'malus' => $malusApplied,
-        ];
-
-        if ($scoreUpdated) {
-            $rollDicePayload['score'] = $player->score;
-        }
-
-        broadcast(event: new GameRealtimeEvent(
-            gamecode: $gamecode,
-            type: 'rollDiceResult',
-            data: $rollDicePayload,
-        ));
-
-        if ($requiresQuestion) {
-            $question = Question::where('category', $category)->inRandomOrder()->first();
-            if (!$question) {
-                return response()->json(['success' => false, 'message' => 'Question not found']);
+            if (!$player) {
+                throw new Exception('Player not found');
             }
 
-            $player->current_question_id = $question->id;
+            if (!$player->is_current) {
+                throw new Exception('Not your turn');
+            }
+
+            if (!$player->canRoll) {
+                throw new Exception('You cannot roll the dice right now');
+            }
+
+            $turnOutcome = $this->resolveBoardState($player, (int) $result);
+            [
+                'category' => $category,
+                'currentPosition' => $currentPosition,
+                'requiresQuestion' => $requiresQuestion,
+                'scoreUpdated' => $scoreUpdated,
+                'bonusAwarded' => $bonusAwarded,
+                'malusApplied' => $malusApplied,
+                'skipNextTurn' => $skipNextTurn,
+            ] = $turnOutcome;
+
             $player->save();
+
+            $nextCanRollState = !$requiresQuestion;
+            Player::where('lobby_id', $lobby->id)->update(['canRoll' => $nextCanRollState]);
+
+            if ($requiresQuestion) {
+                $question = $this->askQuestion($player, $category, $gamecode);
+                if (!$question) {
+                    throw new Exception('Question not found');
+                }
+            }
+
+            $nextPlayer = $this->getNextPlayer($player, $lobby);
+            $rollDicePayload = [
+                'player_id' => $player->id,
+                'result' => $result,
+                'category' => $category,
+                'position' => $currentPosition,
+                'score' => $player->score,
+                'bonus' => $bonusAwarded,
+                'malus' => $malusApplied,
+                'requiresQuestion' => $requiresQuestion,
+                'canRoll' => $nextCanRollState,
+                'prison_turns' => $player->prison_turns,
+                'skipNextTurn' => $skipNextTurn,
+            ];
 
             broadcast(event: new GameRealtimeEvent(
                 gamecode: $gamecode,
-                type: 'question',
-                data: [
-                        'player_id' => $player->id,
-                        'question' => $question,
-                ],
-            ));
-        }
-
-        // Désigner le prochain joueur
-        $allPlayers = Player::where('lobby_id', $lobby->id)
-            ->where('order', '>', 0)
-            ->orderBy('order')
-            ->get();
-
-        if ($allPlayers->count() > 1) {
-            // Retirer is_current du joueur actuel
-            $player->is_current = false;
-            $player->save();
-            broadcast(new \App\Events\CurrentPlayerUpdated(
-                userId: $player->id,
-                gamecode: $gamecode,
-                isCurrent: false,
+                type: 'rollDiceResult',
+                data: $rollDicePayload,
             ));
 
-            // Trouver le prochain joueur selon l'ordre
-            $currentOrder = $player->order;
-            $nextPlayer = $allPlayers->firstWhere('order', '>', $currentOrder);
-
-            // Si aucun joueur avec un ordre supérieur, prendre le premier (boucle)
-            if (!$nextPlayer) {
-                $nextPlayer = $allPlayers->first();
-            }
-
-            // Désigner le prochain joueur
-            $nextPlayer->is_current = true;
-            $nextPlayer->save();
-            broadcast(new \App\Events\CurrentPlayerUpdated(
-                userId: $nextPlayer->id,
-                gamecode: $gamecode,
-                isCurrent: true,
-            ));
-        } else {
-            // Si un seul joueur, le garder comme joueur courant
-            $player->is_current = true;
-            $player->save();
-            broadcast(new \App\Events\CurrentPlayerUpdated(
-                userId: $player->id,
-                gamecode: $gamecode,
-                isCurrent: true,
-            ));
+            $this->rotateCurrentPlayer($player, $nextPlayer, $gamecode);
+        } catch (Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()]);
         }
 
         return response()->json(['success' => true, 'question' => $question]);
@@ -302,5 +186,141 @@ class GameController extends Controller
             'answer' => $user_answer,
             'playerId' => $playerId,
         ]);
+    }
+
+    private function resolveBoardState(Player $player, int $diceResult): array
+    {
+        $category = null;
+        $requiresQuestion = true;
+        $scoreUpdated = false;
+        $bonusAwarded = false;
+        $malusApplied = false;
+        $skipNextTurn = false;
+
+        if ($player->prison_turns > 0) {
+            $player->prison_turns -= 1;
+            $category = 'prison';
+            $requiresQuestion = false;
+        } else {
+            if ($diceResult === 6) {
+                $category = 'cyber_risk';
+            } else {
+                $maxPosition = Gameboard::max('position');
+                $boardSize = $maxPosition + 1;
+                $player->position = ($player->position + $diceResult) % $boardSize;
+
+                $gameboard = Gameboard::where('position', $player->position)->first();
+                $category = $gameboard?->category ?? 'password';
+            }
+
+            switch ($category) {
+                case 'bonus':
+                    $player->score += 2;
+                    $scoreUpdated = true;
+                    $requiresQuestion = false;
+                    $bonusAwarded = true;
+                    break;
+                case 'malus':
+                    $player->score = max(0, $player->score - 2);
+                    $scoreUpdated = true;
+                    $requiresQuestion = false;
+                    $malusApplied = true;
+                    break;
+                case 'prison':
+                    $player->prison_turns = 1;
+                    $requiresQuestion = false;
+                    $skipNextTurn = true;
+                    break;
+                case '':
+                case null:
+                    $requiresQuestion = false;
+                    break;
+            }
+        }
+
+        if (!$requiresQuestion) {
+            $player->current_question_id = null;
+        }
+
+        if ($player->prison_turns > 0) {
+            $skipNextTurn = true;
+        }
+
+
+        return [
+            'category' => $category,
+            'currentPosition' => $player->position,
+            'requiresQuestion' => $requiresQuestion,
+            'scoreUpdated' => $scoreUpdated,
+            'bonusAwarded' => $bonusAwarded,
+            'malusApplied' => $malusApplied,
+            'skipNextTurn' => $skipNextTurn,
+        ];
+    }
+
+    private function askQuestion(Player $player, ?string $category, string $gamecode): ?Question
+    {
+        $question = Question::where('category', $category)->inRandomOrder()->first();
+
+        if (!$question) {
+            return null;
+        }
+
+        $player->current_question_id = $question->id;
+        $player->save();
+
+        broadcast(event: new GameRealtimeEvent(
+            gamecode: $gamecode,
+            type: 'question',
+            data: [
+                'player_id' => $player->id,
+                'question' => $question,
+            ],
+        ));
+
+        return $question;
+    }
+
+    private function updateCurrentPlayerState(Player $player, string $gamecode, bool $isCurrent): void
+    {
+        $player->is_current = $isCurrent;
+        $player->save();
+
+        broadcast(new \App\Events\CurrentPlayerUpdated(
+            userId: $player->id,
+            gamecode: $gamecode,
+            isCurrent: $isCurrent,
+        ));
+    }
+
+    private function getNextPlayer(Player $player, Lobby $lobby): Player
+    {
+        $allPlayers = Player::where('lobby_id', $lobby->id)
+            ->where('order', '>', 0)
+            ->orderBy('order')
+            ->get();
+
+        if ($allPlayers->isEmpty()) {
+            return $player;
+        }
+
+        if ($allPlayers->count() === 1) {
+            return $player;
+        }
+
+        return $allPlayers->firstWhere('order', '>', $player->order)
+            ?? $allPlayers->first()
+            ?? $player;
+    }
+
+    private function rotateCurrentPlayer(Player $currentPlayer, Player $nextPlayer, string $gamecode): void
+    {
+        if ($currentPlayer->id === $nextPlayer->id) {
+            $this->updateCurrentPlayerState($currentPlayer, $gamecode, true);
+            return;
+        }
+
+        $this->updateCurrentPlayerState($currentPlayer, $gamecode, false);
+        $this->updateCurrentPlayerState($nextPlayer, $gamecode, true);
     }
 }

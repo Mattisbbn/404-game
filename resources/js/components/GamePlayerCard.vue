@@ -14,7 +14,7 @@
         <div class="flex items-center space-x-2 text-right">
             <div>
                 <div class="text-xs text-gray-400">Position</div>
-                <div class="text-sm font-bold text-white">{{ position }}</div>
+                <div class="text-sm font-bold text-white">{{ position +1 }}</div>
             </div>
             <div>
                 <div class="text-xs text-gray-400">Score</div>

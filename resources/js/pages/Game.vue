@@ -1,8 +1,23 @@
 <template>
     <Head :title="`Game ${gamecode}`"></Head>
     <div class="cursor-default-must flex min-h-dvh flex-col">
-        <section id="dice-section" class="section-clickable flex flex-1 items-center justify-center px-6 py-8">
-            <div class="mx-auto max-w-sm text-center">
+        <section id="dice-section" class="section-clickable relative flex flex-1 items-center justify-center px-6 py-8">
+            <transition name="fade">
+                <div
+                    v-if="showSpecialPopup"
+                    class="pointer-events-none absolute inset-x-4 top-6 z-10 mx-auto max-w-lg"
+                >
+                    <div
+                        class="rounded-2xl border px-6 py-4 text-center shadow-xl backdrop-blur"
+                        :class="[specialPopupClasses.bg, specialPopupClasses.border]"
+                    >
+                        <p class="text-xs font-semibold uppercase tracking-widest text-gray-200">{{ specialPopup.type }}</p>
+                        <h4 class="mt-1 text-lg font-bold text-white">{{ specialPopup.title }}</h4>
+                        <p class="mt-2 text-sm text-gray-100/90">{{ specialPopup.message }}</p>
+                    </div>
+                </div>
+            </transition>
+            <div class="mx-auto max-w-lg text-center">
                 <div id="current-player" class="section-clickable mb-6">
                     <div class="mb-2 flex items-center justify-center space-x-2">
                         <div class="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#39b54a] bg-[#1A3D3C]">
@@ -50,7 +65,7 @@
         </section>
 
         <footer id="footer" class="section-clickable border-t border-gray-800 px-6 py-6">
-            <div class="mx-auto max-w-sm">
+            <div class="mx-auto max-w-lg">
                 <div id="game-legend" class="section-clickable mb-4">
                     <h3 class="mb-3 text-center text-sm font-semibold text-white">Categories</h3>
                     <div class="grid grid-cols-2 gap-2">
@@ -145,14 +160,26 @@ const toast = useToast();
 const activePlayers = ref([]);
 const currentPlayerId = ref(props.currentPlayerId ?? null);
 const currentPlayer = computed(() => activePlayers.value.find((player) => player.id === currentPlayerId.value));
-const showQuizPopup = ref(false);
-const question = ref({});
 const showSpecialPopup = ref(false);
 const specialPopup = ref({
     title: '',
     message: '',
     type: '',
 });
+const specialPopupClasses = computed(() => {
+    switch (specialPopup.value.type) {
+        case 'bonus':
+            return { bg: 'bg-emerald-500/20', border: 'border-emerald-400/60' };
+        case 'malus':
+            return { bg: 'bg-rose-500/20', border: 'border-rose-400/60' };
+        case 'prison':
+            return { bg: 'bg-amber-500/20', border: 'border-amber-400/60' };
+        default:
+            return { bg: 'bg-slate-500/20', border: 'border-slate-400/60' };
+    }
+});
+const showQuizPopup = ref(false);
+const question = ref({});
 let specialPopupTimeout = null;
 
 const restorePendingQuestion = () => {
@@ -233,6 +260,7 @@ onMounted(() => {
         })
         .listen('.GameRealtimeEvent', (event) => {
             if (event.type === 'rollDiceResult') {
+                console.log(event.data);
                 const affectedPlayer = activePlayers.value.find((player) => player.id === event.data.player_id);
                 if (affectedPlayer) {
                     affectedPlayer.position = event.data.position;
@@ -256,22 +284,22 @@ onMounted(() => {
                 if (event.data.bonus === true && event.data.player_id === props.playerId) {
                     showTemporaryPopup({
                         title: 'Bonus +2 points',
-                        message: 'Excellent ! Tu gagnes 2 points sans répondre à un quiz.',
+                        message: 'Excellent ! you gain 2 points without answering a quiz.',
                         type: 'bonus',
                     });
-                } else if (event.data.malus === true && event.data.player_id === props.playerId) {
+                } else if(event.data.malus === true && event.data.player_id === props.playerId) {
                     showTemporaryPopup({
                         title: 'Malus -2 points',
-                        message: 'Oups ! Tu perds 2 points immédiatement.',
-                        type: 'malus',
-                    });
-                } else if (event.data.prison_turns && event.data.player_id === props.playerId) {
-                    showTemporaryPopup({
-                        title: 'Tu es en prison',
-                        message: 'Ton prochain tour est bloqué. Patiente un instant !',
-                        type: 'prison',
-                    });
-                }
+                        message: 'Oops ! you lose 2 points immediately.',
+                    type: 'malus',
+                });
+            } else if (event.data.prison_turns && event.data.player_id === props.playerId) {
+                showTemporaryPopup({
+                    title: 'You are in prison',
+                    message: 'Your next turn is blocked. Please wait a moment!',
+                    type: 'prison',
+                });
+            }
 
                 toast.success(`${affectedPlayer?.username} has rolled a ${event.data.result}!`);
             } else if (event.type === 'question') {

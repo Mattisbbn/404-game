@@ -1,7 +1,7 @@
 <template>
-    <form id="main-container" class="cursor-default-must flex min-h-dvh flex-col" @submit.prevent="handleSubmit">
+    <form id="main-container" class="cursor-default-must flex min-h-dvh flex-col w-full" @submit.prevent="handleSubmit">
         <header id="header" class="section-clickable border-b border-gray-800 px-6 py-4">
-            <div class="mx-auto flex max-w-sm items-center justify-between">
+            <div class="mx-auto flex max-w-lg items-center justify-between">
                 <button
                     class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-800 transition-colors hover:bg-gray-700"
                     @click="$emit('close')"
@@ -38,7 +38,7 @@
         </header>
 
         <section id="quiz-content" class="section-clickable flex-1 px-6 py-6">
-            <div class="mx-auto max-w-sm">
+            <div class="mx-auto max-w-lg">
                 <div id="question-card" class="section-clickable mb-6 rounded-2xl bg-gray-800 p-6">
                     <h2 class="text-center text-xl font-bold text-white">
                         {{ question?.question }}
@@ -78,7 +78,7 @@
         </section>
 
         <footer id="footer" class="section-clickable border-t border-gray-800 px-6 py-6">
-            <div class="mx-auto max-w-sm">
+            <div class="mx-auto max-w-lg">
                 <button
                     id="submit-btn"
                     class="section-clickable w-full cursor-pointer rounded-xl bg-[#39B54A] px-6 py-4 font-semibold text-white transition-colors hover:bg-[#39B54A]/80 disabled:cursor-not-allowed disabled:bg-gray-500/50 disabled:opacity-50"

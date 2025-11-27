@@ -34,15 +34,15 @@ class LobbyController extends Controller
             $player->save();
         } else {
             // Créer un nouveau joueur
-            $player = Player::create([
-                'username' => $username,
-                'lobby_id' => $lobby->id,
-                'status' => 'waiting',
-                'color' => $colors[array_rand($colors)],
-                'score' => 0,
-                'position' => 0,
-                'order' => 0,
-            ]);
+        $player = Player::create([
+            'username' => $username,
+            'lobby_id' => $lobby->id,
+            'status' => 'waiting',
+            'color' => $colors[array_rand($colors)],
+            'score' => 0,
+            'position' => 0,
+            'order' => 0,
+        ]);
         }
 
         $playerId = $player->id;

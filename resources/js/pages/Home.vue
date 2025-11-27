@@ -3,7 +3,7 @@
 
     <main class="cursor-default-must flex min-h-dvh flex-col">
         <section id="hero-section" class="section-clickable flex flex-1 flex-col justify-center px-6">
-            <div class="mx-auto w-full max-w-sm">
+            <div class="mx-auto w-full max-w-lg">
                 <div id="logo-area" class="section-clickable mb-6 text-center">
                     <div
                         class="from-accent mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br to-green-400 shadow-2xl"

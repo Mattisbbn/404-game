@@ -1,5 +1,5 @@
 <template>
-<form id="main-container" class="flex flex-col h-screen cursor-default-must" @submit.prevent="handleSubmit">
+<form id="main-container" class="flex flex-col min-h-dvh cursor-default-must" @submit.prevent="handleSubmit">
 
         <header id="header" class="px-6 py-4 border-b border-gray-800 section-clickable">
             <div class="flex items-center justify-between max-w-sm mx-auto">

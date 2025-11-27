@@ -32,7 +32,7 @@
                 </div>
                 <div class="text-right">
                     <div class="text-xs text-gray-400">Points</div>
-                    <div class="text-sm font-bold text-white">+10</div>
+                    <div class="text-sm font-bold text-white">{{ question?.points }}</div>
                 </div>
             </div>
         </header>

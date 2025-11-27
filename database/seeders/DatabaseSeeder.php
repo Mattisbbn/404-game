@@ -9,6 +9,7 @@ use App\Models\Gameboard;
 use Database\Factories\GameboardFactory;
 use App\Models\Question;
 use Database\Factories\QuestionFactory;
+
 class DatabaseSeeder extends Seeder
 {
     /**
@@ -16,7 +17,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
 
         User::factory()->create([
             'name' => 'Test User',
@@ -30,19 +30,6 @@ class DatabaseSeeder extends Seeder
                 'category' => $entry['category'],
             ]);
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         $questions = [
             // 🟦 CATEGORY 1 — PASSWORD SECURITY
@@ -858,19 +845,5 @@ class DatabaseSeeder extends Seeder
         foreach ($questions as $data) {
             Question::create($data);
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 }

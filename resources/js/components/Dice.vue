@@ -116,7 +116,7 @@ const rollDice = () => {
             ? 'Result : (Advanced Cyber-Risk !)'
             : `Result : ${result}`;
         isResultVisible.value = true;
-        emit('roll-finished', 1);
+        emit('roll-finished', result);
     }, 5000);
 };
 

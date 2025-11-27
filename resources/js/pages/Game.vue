@@ -234,7 +234,7 @@ const handleDiceRollFinished = (value) => {
             playerId: props.playerId,
         })
         .then((response) => {
-            console.log(response.data);
+
             if (!response.data.success) {
                 toast.error(response.data.message);
             }
@@ -260,7 +260,6 @@ onMounted(() => {
         })
         .listen('.GameRealtimeEvent', (event) => {
             if (event.type === 'rollDiceResult') {
-                console.log(event.data);
                 const affectedPlayer = activePlayers.value.find((player) => player.id === event.data.player_id);
                 if (affectedPlayer) {
                     affectedPlayer.position = event.data.position;

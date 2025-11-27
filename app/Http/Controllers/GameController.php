@@ -161,6 +161,7 @@ class GameController extends Controller
             'position' => $currentPosition,
             'canRoll' => $nextCanRollState,
             'prison_turns' => $player->prison_turns,
+            'requiresQuestion' => $requiresQuestion,
         ];
 
         if ($scoreUpdated) {

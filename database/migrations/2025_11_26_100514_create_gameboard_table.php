@@ -16,7 +16,7 @@ return new class extends Migration
             $table->timestamps();
             $table->integer('score');
             $table->integer('position');
-            $table->enum('category', ['password','phishing','social_media','cyber_risk','']);
+            $table->enum('category', ['password','phishing','social_media','cyber_risk','prison','bonus','malus','']);
         });
     }
 

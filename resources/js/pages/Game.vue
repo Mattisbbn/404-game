@@ -5,7 +5,7 @@
             <div class="text-center max-w-sm mx-auto">
                 <div id="current-player" class="mb-6 section-clickable">
                     <div class="flex items-center justify-center space-x-2 mb-2">
-                        <div class="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
+                        <div class="w-8 h-8 bg-[#1A3D3C] border-2 border-[#39b54a] rounded-full flex items-center justify-center">
                             <span class="text-white font-bold text-sm">{{ currentPlayer?.username.charAt(0).toUpperCase() }}</span>
                         </div>
                         <span class="text-lg font-semibold text-white">{{ currentPlayer?.username }}'s Turn</span>
@@ -125,6 +125,21 @@ const currentPlayerId = ref(props.currentPlayerId ?? null);
 const currentPlayer = computed(() => activePlayers.value.find(player => player.id === currentPlayerId.value));
 const showQuizPopup = ref(false);
 const question = ref({});
+const showSpecialPopup = ref(false);
+const specialPopup = ref({
+    title: '',
+    message: '',
+    type: '',
+});
+let specialPopupTimeout = null;
+
+const restorePendingQuestion = () => {
+    const currentUser = activePlayers.value.find(player => player.id === props.playerId);
+    if (currentUser?.question) {
+        question.value = currentUser.question;
+        showQuizPopup.value = true;
+    }
+};
 
 
 const handleSubmitQuiz = (answer) => {
@@ -153,6 +168,15 @@ const handleCloseQuiz = () => {
     showQuizPopup.value = false;
 };
 
+const showTemporaryPopup = (payload) => {
+    window.clearTimeout(specialPopupTimeout);
+    specialPopup.value = payload;
+    showSpecialPopup.value = true;
+    specialPopupTimeout = window.setTimeout(() => {
+        showSpecialPopup.value = false;
+    }, 4000);
+};
+
 const handleDiceRollFinished = (value) => {
     axios.post(`/roll-dice/${props.gamecode}`, {
         result: value,
@@ -171,7 +195,7 @@ onMounted(() => {
     window.Echo.join(`game.${props.gamecode}`)
         .here((users) => {
             activePlayers.value = users;
-            question.value = users.find(player => player.id === currentPlayerId.value)?.question;
+            restorePendingQuestion();
         })
         .joining((user) => {
             activePlayers.value.push(user);
@@ -186,6 +210,15 @@ onMounted(() => {
                 const affectedPlayer = activePlayers.value.find(player => player.id === event.data.player_id);
                 if (affectedPlayer) {
                     affectedPlayer.position = event.data.position;
+                    if (event.data.score !== undefined) {
+                        affectedPlayer.score = event.data.score;
+                    }
+                    if (event.data.prison_turns !== undefined) {
+                        affectedPlayer.prison_turns = event.data.prison_turns;
+                    }
+                    if (!event.data.requiresQuestion) {
+                        affectedPlayer.question = null;
+                    }
                 }
                 // Mettre à jour canRoll pour tous les joueurs
                 if (event.data.canRoll !== undefined) {
@@ -193,8 +226,33 @@ onMounted(() => {
                         player.canRoll = event.data.canRoll;
                     });
                 }
+
+                if (event.data.bonus === true && event.data.player_id === props.playerId) {
+                    showTemporaryPopup({
+                        title: 'Bonus +2 points',
+                        message: 'Excellent ! Tu gagnes 2 points sans répondre à un quiz.',
+                        type: 'bonus',
+                    });
+                } else if (event.data.malus === true && event.data.player_id === props.playerId) {
+                    showTemporaryPopup({
+                        title: 'Malus -2 points',
+                        message: 'Oups ! Tu perds 2 points immédiatement.',
+                        type: 'malus',
+                    });
+                } else if (event.data.prison_turns && event.data.player_id === props.playerId) {
+                    showTemporaryPopup({
+                        title: 'Tu es en prison',
+                        message: 'Ton prochain tour est bloqué. Patiente un instant !',
+                        type: 'prison',
+                    });
+                }
+
                 toast.success(`${affectedPlayer?.username} has rolled a ${event.data.result}!`);
             } else if (event.type === 'question') {
+                const targetPlayer = activePlayers.value.find(player => player.id === event.data.player_id);
+                if (targetPlayer) {
+                    targetPlayer.question = event.data.question;
+                }
                 // Afficher le quiz uniquement pour le joueur concerné
                 if (event.data.player_id === props.playerId) {
                     question.value = event.data.question;
@@ -204,12 +262,17 @@ onMounted(() => {
                 const affectedPlayer = activePlayers.value.find(player => player.id === event.data.player_id);
                 if (affectedPlayer) {
                     affectedPlayer.score = event.data.score;
+                    affectedPlayer.question = null;
                 }
                 // Réactiver canRoll pour tous les joueurs après avoir répondu
                 if (event.data.canRoll !== undefined) {
                     activePlayers.value.forEach(player => {
                         player.canRoll = event.data.canRoll;
                     });
+                }
+                if (event.data.player_id === props.playerId) {
+                    showQuizPopup.value = false;
+                    question.value = {};
                 }
             }
         })

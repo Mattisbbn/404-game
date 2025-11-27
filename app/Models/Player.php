@@ -8,7 +8,7 @@ use Illuminate\Notifications\Notifiable;
 class Player extends Authenticatable
 {
     use Notifiable;
-    protected $fillable = ['username', 'lobby_id', 'score', 'status', 'color', 'position', 'order', 'canRoll', 'current_question_id'];
+    protected $fillable = ['username', 'lobby_id', 'score', 'status', 'color', 'position', 'order', 'canRoll', 'current_question_id', 'prison_turns'];
 
     public function lobby()
     {

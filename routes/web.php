@@ -20,6 +20,7 @@ Route::get('/lobby/{gamecode}', function (string $gamecode) {
         return redirect()->route('home')->with('error', 'Lobby not found');
     }
 
+
     $playerId = session('player_id');
     if (!$playerId) {
         return redirect()->route('home')->with('error', 'Player not found');

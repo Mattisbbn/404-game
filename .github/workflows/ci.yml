@@ -21,3 +21,4 @@ jobs:
             sudo npm install
             sudo npm run build
             sudo php artisan migrate:fresh --seed --force
+            sudo php artisan optimize

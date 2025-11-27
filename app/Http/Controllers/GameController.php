@@ -97,6 +97,8 @@ class GameController extends Controller
         $scoreUpdated = false;
         $question = null;
         $skippingPrisonTurn = false;
+        $bonusAwarded = false;
+        $malusApplied = false;
 
         if ($player->prison_turns > 0) {
             // Le joueur est en prison : il ne bouge pas et ne reçoit pas de question
@@ -126,11 +128,13 @@ class GameController extends Controller
                     $player->score += 2;
                     $scoreUpdated = true;
                     $requiresQuestion = false;
+                    $bonusAwarded = true;
                     break;
                 case 'malus':
                     $player->score = max(0, $player->score - 2);
                     $scoreUpdated = true;
                     $requiresQuestion = false;
+                    $malusApplied = true;
                     break;
                 case 'prison':
                     $player->prison_turns = 1;
@@ -162,6 +166,8 @@ class GameController extends Controller
             'canRoll' => $nextCanRollState,
             'prison_turns' => $player->prison_turns,
             'requiresQuestion' => $requiresQuestion,
+            'bonus' => $bonusAwarded,
+            'malus' => $malusApplied,
         ];
 
         if ($scoreUpdated) {

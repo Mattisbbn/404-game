@@ -1,48 +1,51 @@
 <template>
-
-    <main class="px-6 py-6 min-h-dvh">
+    <main class="min-h-dvh px-6 py-6">
         <div class="mx-auto max-w-sm">
-            <div class=" mb-8 text-center">
+            <div class="mb-8 text-center">
                 <div class="mb-4 inline-flex items-center space-x-2 rounded-full bg-gray-800 px-6 py-3">
                     <Icon icon="mdi:hashtag" class="text-accent text-2xl text-[#39b54a]" />
                     <span class="text-2xl font-bold tracking-wider text-white">{{ gamecode }}</span>
-                    <button class="hover:text-accent ml-2 cursor-pointer text-gray-400 transition-colors"
-                        @click="copyGamecode">
+                    <button class="hover:text-accent ml-2 cursor-pointer text-gray-400 transition-colors" @click="copyGamecode">
                         <Icon icon="mdi:content-copy" class="text-xl" />
                     </button>
                 </div>
                 <p class="text-sm text-gray-400">Share this code with your friends</p>
             </div>
 
-            <div class=" mb-8">
+            <div class="mb-8">
                 <div class="mb-4 flex items-center justify-between">
                     <h2 class="text-lg font-semibold text-white">Players</h2>
-                    <span
-                        class="flex items-center space-x-2 rounded-full bg-gray-800 px-3 py-1 text-sm font-medium text-white">
+                    <span class="flex items-center space-x-2 rounded-full bg-gray-800 px-3 py-1 text-sm font-medium text-white">
                         <Icon icon="mdi:users" class="text-accent me-1 text-sm" /> {{ numbersOfPlayers }}/8
                     </span>
                 </div>
 
-                <div class=" space-y-3">
+                <div class="space-y-3">
                     <div v-if="isLoadingPlayers" class="flex items-center justify-center py-8">
                         <Icon icon="eos-icons:loading" class="animate-spin text-4xl text-[#39b54a]" />
                     </div>
                     <template v-else>
-                        <UserCard v-for="player in activePlayers"
+                        <UserCard
+                            v-for="player in activePlayers"
                             :is-me="player.id === playerId"
                             :key="player.id"
-                            :username="player.username" :status="player.id === playerId ? status : player.status"
-                            :color="player.color" />
+                            :username="player.username"
+                            :status="player.id === playerId ? status : player.status"
+                            :color="player.color"
+                        />
                     </template>
                 </div>
             </div>
 
             <button
-                class=" flex w-full transform items-center justify-center space-x-3 rounded-xl px-6 py-4 font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:bg-green-500 active:scale-[0.98]"
+                class="flex w-full transform items-center justify-center space-x-3 rounded-xl px-6 py-4 font-semibold text-white shadow-lg transition-all duration-200 hover:scale-[1.02] hover:bg-green-500 active:scale-[0.98]"
                 :class="[
                     status === 'waiting' ? 'bg-[#39b54a]' : 'bg-gray-500',
-                    isUpdatingStatus ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'
-                ]" @click="changePlayerStatus" :disabled="isUpdatingStatus">
+                    isUpdatingStatus ? 'cursor-not-allowed opacity-70' : 'cursor-pointer',
+                ]"
+                @click="changePlayerStatus"
+                :disabled="isUpdatingStatus"
+            >
                 <Icon v-if="isUpdatingStatus" icon="eos-icons:loading" class="animate-spin text-xl" />
                 <Icon v-else icon="mdi:check" class="color-transparent text-xl" />
                 <p v-if="isUpdatingStatus" class="text-lg">Updating...</p>
@@ -51,14 +54,13 @@
             </button>
         </div>
     </main>
-
 </template>
 
 <script setup>
 import { Icon } from '@iconify/vue';
-import axios from 'axios';
 import { router } from '@inertiajs/vue3';
-import { onMounted, onUnmounted, ref, computed } from 'vue';
+import axios from 'axios';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useToast } from 'vue-toast-notification';
 import UserCard from '../components/UserCard.vue';
 

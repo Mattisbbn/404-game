@@ -1,84 +1,103 @@
 <template>
-<form id="main-container" class="flex flex-col min-h-dvh cursor-default-must" @submit.prevent="handleSubmit">
-
-        <header id="header" class="px-6 py-4 border-b border-gray-800 section-clickable">
-            <div class="flex items-center justify-between max-w-sm mx-auto">
+    <form id="main-container" class="cursor-default-must flex min-h-dvh flex-col" @submit.prevent="handleSubmit">
+        <header id="header" class="section-clickable border-b border-gray-800 px-6 py-4">
+            <div class="mx-auto flex max-w-sm items-center justify-between">
                 <button
-                    class="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-gray-700 transition-colors"
+                    class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-800 transition-colors hover:bg-gray-700"
                     @click="$emit('close')"
                 >
-                    <Icon icon="mdi:close" class="text-white text-2xl" />
+                    <Icon icon="mdi:close" class="text-2xl text-white" />
                 </button>
                 <div class="flex items-center space-x-3">
-                    <div :style="{ backgroundColor: categoryColor }" class="w-8 h-8  rounded-lg flex items-center justify-center">
-                        <i class="text-white text-sm" data-fa-i2svg=""><svg class="svg-inline--fa fa-shield-halved" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="shield-halved" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-fa-i2svg=""><path fill="currentColor" d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8V444.8C394 378 431.1 230.1 432 141.4L256 66.8l0 0z"></path></svg></i>
+                    <div :style="{ backgroundColor: categoryColor }" class="flex h-8 w-8 items-center justify-center rounded-lg">
+                        <i class="text-sm text-white" data-fa-i2svg=""
+                            ><svg
+                                class="svg-inline--fa fa-shield-halved"
+                                aria-hidden="true"
+                                focusable="false"
+                                data-prefix="fas"
+                                data-icon="shield-halved"
+                                role="img"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 512 512"
+                                data-fa-i2svg=""
+                            >
+                                <path
+                                    fill="currentColor"
+                                    d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8V444.8C394 378 431.1 230.1 432 141.4L256 66.8l0 0z"
+                                ></path></svg
+                        ></i>
                     </div>
-                    <h1 class="text-lg font-bold text-white" >{{ getTextFromCategory(question?.category) }}</h1>
+                    <h1 class="text-lg font-bold text-white">{{ getTextFromCategory(question?.category) }}</h1>
                 </div>
                 <div class="text-right">
-                    <div class="text-xs text-gray-400" >Points</div>
-                    <div class="text-sm font-bold text-white" >+10</div>
+                    <div class="text-xs text-gray-400">Points</div>
+                    <div class="text-sm font-bold text-white">+10</div>
                 </div>
             </div>
         </header>
 
-
-        <section id="quiz-content" class="flex-1 px-6 py-6 section-clickable">
-            <div class="max-w-sm mx-auto">
-
-                <div id="question-card" class="bg-gray-800 rounded-2xl p-6 mb-6 section-clickable">
-
-                    <h2 class="text-xl font-bold text-white text-center" >
+        <section id="quiz-content" class="section-clickable flex-1 px-6 py-6">
+            <div class="mx-auto max-w-sm">
+                <div id="question-card" class="section-clickable mb-6 rounded-2xl bg-gray-800 p-6">
+                    <h2 class="text-center text-xl font-bold text-white">
                         {{ question?.question }}
                     </h2>
-
                 </div>
 
-                <div id="options-container" class="space-y-3 mb-6 section-clickable">
-
+                <div id="options-container" class="section-clickable mb-6 space-y-3">
                     <label
                         v-for="answer in question?.answers || []"
                         :key="answer.letter"
-                        class="option-card flex items-center space-x-3 bg-gray-800 border-2 rounded-xl p-4 cursor-pointer transition-colors"
+                        class="option-card flex cursor-pointer items-center space-x-3 rounded-xl border-2 bg-gray-800 p-4 transition-colors"
                         :style="{
                             borderColor: selectedAnswer === answer.letter ? categoryColor : '#374151',
                             '--hover-color': categoryColor + '80',
                         }"
-                        @mouseenter="(e) => { if (selectedAnswer !== answer.letter) e.currentTarget.style.borderColor = categoryColor + '80'; }"
-                        @mouseleave="(e) => { if (selectedAnswer !== answer.letter) e.currentTarget.style.borderColor = '#374151'; }"
+                        @mouseenter="
+                            (e) => {
+                                if (selectedAnswer !== answer.letter) e.currentTarget.style.borderColor = categoryColor + '80';
+                            }
+                        "
+                        @mouseleave="
+                            (e) => {
+                                if (selectedAnswer !== answer.letter) e.currentTarget.style.borderColor = '#374151';
+                            }
+                        "
                     >
-                        <input type="radio" v-model="selectedAnswer" :value="answer.letter" name="answer" class="hidden">
+                        <input type="radio" v-model="selectedAnswer" :value="answer.letter" name="answer" class="hidden" />
                         <div class="flex items-center space-x-3">
-                            <div class="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center font-bold text-sm text-white" >
+                            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-700 text-sm font-bold text-white">
                                 {{ answer.letter }}
                             </div>
-                            <span class="text-white font-medium" >{{ answer.answer }}</span>
+                            <span class="font-medium text-white">{{ answer.answer }}</span>
                         </div>
                     </label>
                 </div>
             </div>
         </section>
 
-        <footer id="footer" class="px-6 py-6 border-t border-gray-800 section-clickable">
-            <div class="max-w-sm mx-auto">
-                <button id="submit-btn" class="w-full bg-[#39B54A] hover:bg-[#39B54A]/80 text-white font-semibold py-4 px-6 rounded-xl transition-colors disabled:opacity-50 disabled:bg-gray-500/50 disabled:cursor-not-allowed section-clickable cursor-pointer" :disabled="selectedAnswer === null">
+        <footer id="footer" class="section-clickable border-t border-gray-800 px-6 py-6">
+            <div class="mx-auto max-w-sm">
+                <button
+                    id="submit-btn"
+                    class="section-clickable w-full cursor-pointer rounded-xl bg-[#39B54A] px-6 py-4 font-semibold text-white transition-colors hover:bg-[#39B54A]/80 disabled:cursor-not-allowed disabled:bg-gray-500/50 disabled:opacity-50"
+                    :disabled="selectedAnswer === null"
+                >
                     <div class="flex items-center justify-center space-x-2">
-                       <Icon icon="mdi:send" class="text-white text-2xl" />
-                        <span class="text-white" >Submit Answer</span>
+                        <Icon icon="mdi:send" class="text-2xl text-white" />
+                        <span class="text-white">Submit Answer</span>
                     </div>
                 </button>
-
             </div>
         </footer>
-
     </form>
 </template>
 
 <script setup>
-
 import { Icon } from '@iconify/vue';
-import { categoriesColors } from '../utils/colors';
 import { computed, ref } from 'vue';
+import { categoriesColors } from '../utils/colors';
 import getTextFromCategory from '../utils/text';
 
 const emit = defineEmits(['close', 'submit']);
@@ -88,7 +107,6 @@ const props = defineProps({
         type: Object,
         required: true,
     },
-
 });
 
 const selectedAnswer = ref(null);
@@ -100,5 +118,4 @@ const categoryColor = computed(() => {
 const handleSubmit = () => {
     emit('submit', selectedAnswer.value);
 };
-
 </script>

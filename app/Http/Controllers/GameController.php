@@ -65,9 +65,24 @@ class GameController extends Controller
             return response()->json(['success' => false, 'message' => 'Player not found']);
         }
 
+        $hasCurrentPlayer = Player::where('lobby_id', $lobby->id)
+            ->where('is_current', true)
+            ->exists();
+
         // Vérifier que c'est le tour du joueur
         if(!$player->is_current) {
-            return response()->json(['success' => false, 'message' => 'Not your turn']);
+            // Si personne n'est désigné comme joueur courant (ex : partie solo), on le définit
+            if(!$hasCurrentPlayer) {
+                $player->is_current = true;
+                $player->save();
+                broadcast(new \App\Events\CurrentPlayerUpdated(
+                    userId: $player->id,
+                    gamecode: $gamecode,
+                    isCurrent: true,
+                ));
+            } else {
+                return response()->json(['success' => false, 'message' => 'Not your turn']);
+            }
         }
 
         // Vérifier si le joueur a déjà lancé
@@ -76,13 +91,24 @@ class GameController extends Controller
         }
 
 
-        $maxPosition = Gameboard::max('position');
-        $boardSize   = $maxPosition + 1;
+        $category = null;
+        $currentPosition = $player->position;
 
-        $totalSteps = $player->position + $result;
-        $player->position = $totalSteps % $boardSize;
+        if ((int) $result === 6) {
+            // Si le joueur fait 6, il reste sur place et obtient une question Cyber Risk
+            $category = 'cyber_risk';
+            $gameboard = null;
+        } else {
+            $maxPosition = Gameboard::max('position');
+            $boardSize   = $maxPosition + 1;
 
-        $gameboard = Gameboard::where('position', $player->position)->first();
+            $totalSteps = $player->position + $result;
+            $player->position = $totalSteps % $boardSize;
+            $currentPosition = $player->position;
+
+            $gameboard = Gameboard::where('position', $player->position)->first();
+            $category = $gameboard?->category ?? 'password';
+        }
 
         // Désactiver canRoll pour TOUS les joueurs
         Player::where('lobby_id', $lobby->id)->update(['canRoll' => false]);
@@ -93,14 +119,14 @@ class GameController extends Controller
             data: [
                 'player_id' => $player->id,
                 'result' => $result,
-                'category' => $gameboard->category,
-                'position' => $player->position,
+                'category' => $category,
+                'position' => $currentPosition,
                 'canRoll' => false, // Indiquer que plus personne ne peut lancer
             ],
         ));
 
 
-        $question = Question::where('category', $gameboard->category)->inRandomOrder()->first();
+        $question = Question::where('category', $category)->inRandomOrder()->first();
         if (!$question) {
             return response()->json(['success' => false, 'message' => 'Question not found']);
         }

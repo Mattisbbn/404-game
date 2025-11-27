@@ -650,6 +650,207 @@ class DatabaseSeeder extends Seeder
                     ['answer' => 'Making account private on weekends', 'letter' => 'C', 'isCorrect' => false]
                 ]
             ],
+            // 🟪 CATEGORY 4 — ADVANCED CYBER-RISK
+            [
+                'question' => 'What indicates advanced malware?',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'Missing icons', 'letter' => 'A', 'isCorrect' => false],
+                    ['answer' => 'Slow system', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'Strange network activity', 'letter' => 'C', 'isCorrect' => true]
+                ]
+            ],
+            [
+                'question' => 'What risk is associated with unknown USB drives?',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'Possible automatic execution of malware', 'letter' => 'A', 'isCorrect' => true],
+                    ['answer' => 'Mechanical damage', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'Accidental formatting', 'letter' => 'C', 'isCorrect' => false]
+                ]
+            ],
+            [
+                'question' => 'First thing during ransomware?',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'Restart', 'letter' => 'A', 'isCorrect' => false],
+                    ['answer' => 'Pay quickly', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'Disconnect from network', 'letter' => 'C', 'isCorrect' => true]
+                ]
+            ],
+            [
+                'question' => 'Which attack bypasses simple authentication?',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'MFA bypass', 'letter' => 'A', 'isCorrect' => true],
+                    ['answer' => 'DNS spoofing', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'Forced defrag', 'letter' => 'C', 'isCorrect' => false]
+                ]
+            ],
+            [
+                'question' => 'Login anomalies indicate…',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'A time zone change', 'letter' => 'A', 'isCorrect' => false],
+                    ['answer' => 'A sync error', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'A compromise', 'letter' => 'C', 'isCorrect' => true]
+                ]
+            ],
+            [
+                'question' => 'Zero-day means…',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'Unknown vulnerability', 'letter' => 'A', 'isCorrect' => true],
+                    ['answer' => 'Emergency patch', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'Code test', 'letter' => 'C', 'isCorrect' => false]
+                ]
+            ],
+            [
+                'question' => 'What increases targeted attack risk?',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'Using VPN', 'letter' => 'A', 'isCorrect' => false],
+                    ['answer' => 'Working offline', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'Downloading unofficial tools', 'letter' => 'C', 'isCorrect' => true]
+                ]
+            ],
+            [
+                'question' => 'Why antivirus misses malware?',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'Needs premium', 'letter' => 'A', 'isCorrect' => false],
+                    ['answer' => 'Databases too heavy', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'Malware uses evasion', 'letter' => 'C', 'isCorrect' => true]
+                ]
+            ],
+            [
+                'question' => 'A machine shuts down abruptly several times. Which hypothesis?',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'A rootkit or compromised driver', 'letter' => 'A', 'isCorrect' => true],
+                    ['answer' => 'Incorrect screen resolution', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'Wrong keyboard configuration', 'letter' => 'C', 'isCorrect' => false]
+                ]
+            ],
+            [
+                'question' => 'What reduces exploit risk?',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'Using same Wi-Fi', 'letter' => 'A', 'isCorrect' => false],
+                    ['answer' => 'Avoiding attachments', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'Updating regularly', 'letter' => 'C', 'isCorrect' => true]
+                ]
+            ],
+            [
+                'question' => 'Attack targeting humans?',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'Bounce attack', 'letter' => 'A', 'isCorrect' => false],
+                    ['answer' => 'AES brute force', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'Social engineering', 'letter' => 'C', 'isCorrect' => true]
+                ]
+            ],
+            [
+                'question' => 'Which action protects against keyloggers?',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'Using 2FA', 'letter' => 'A', 'isCorrect' => true],
+                    ['answer' => 'Having a password manager', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'Changing keyboard', 'letter' => 'C', 'isCorrect' => false]
+                ]
+            ],
+            [
+                'question' => 'Sign of a botnet?',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'Outbound traffic spikes', 'letter' => 'A', 'isCorrect' => true],
+                    ['answer' => 'Screen dimming', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'Icon moved', 'letter' => 'C', 'isCorrect' => false]
+                ]
+            ],
+            [
+                'question' => 'Multiple web redirects indicate…',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'Site overload', 'letter' => 'A', 'isCorrect' => false],
+                    ['answer' => 'Browser update', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'Malicious script', 'letter' => 'C', 'isCorrect' => true]
+                ]
+            ],
+            [
+                'question' => 'Behavior reducing local exploit risk?',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'Dark mode', 'letter' => 'A', 'isCorrect' => false],
+                    ['answer' => 'Changing wallpaper', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'Installing only official sources', 'letter' => 'C', 'isCorrect' => true]
+                ]
+            ],
+            [
+                'question' => 'MITM aim is to…',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'Intercept communication', 'letter' => 'A', 'isCorrect' => true],
+                    ['answer' => 'Delete files', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'Create fake accounts', 'letter' => 'C', 'isCorrect' => false]
+                ]
+            ],
+            [
+                'question' => 'Why avoid public Wi-Fi?',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'Traffic can be captured', 'letter' => 'A', 'isCorrect' => true],
+                    ['answer' => 'It’s slow', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'Battery drain', 'letter' => 'C', 'isCorrect' => false]
+                ]
+            ],
+            [
+                'question' => 'What is a Trojan?',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'Malicious tool disguised as legitimate', 'letter' => 'A', 'isCorrect' => true],
+                    ['answer' => 'Maintenance script', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'Expired certificate', 'letter' => 'C', 'isCorrect' => false]
+                ]
+            ],
+            [
+                'question' => 'What reflex for an unknown compressed file that looks correct?',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'Scan it and verify the source', 'letter' => 'A', 'isCorrect' => false],
+                    ['answer' => 'Rename it', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'Extract it and scan its content', 'letter' => 'C', 'isCorrect' => true]
+                ]
+            ],
+            [
+                'question' => 'PC contacting unknown servers regularly means…',
+                'points' => 3,
+                'category' => 'cyber_risk',
+                'answers' => [
+                    ['answer' => 'Corrupted file', 'letter' => 'A', 'isCorrect' => false],
+                    ['answer' => 'Automatic update', 'letter' => 'B', 'isCorrect' => false],
+                    ['answer' => 'Backdoor', 'letter' => 'C', 'isCorrect' => true]
+                ]
+            ],
         ];
 
         // On utilise la Factory pour créer les entrées proprement,

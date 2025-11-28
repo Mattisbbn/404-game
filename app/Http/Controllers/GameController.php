@@ -175,9 +175,9 @@ class GameController extends Controller
             ],
         ));
 
-
-
-
+        if ($player->score >= 50) {
+            $this->endGame($gamecode);
+        }
 
         return response()->json([
             'success' => true,
@@ -185,6 +185,21 @@ class GameController extends Controller
             'question' => $player->question,
             'answer' => $user_answer,
             'playerId' => $playerId,
+        ]);
+    }
+
+    public function showLeaderboard(string $gamecode)
+    {
+        $lobby = Lobby::where('gamecode', $gamecode)->first();
+        if (!$lobby) {
+            return redirect()->route('home')->with('error', 'Lobby not found');
+        }
+        $leaderboard = Player::where('lobby_id', $lobby->id)
+            ->orderBy('score', 'desc')
+            ->get();
+        return Inertia::render('Leaderboard', [
+            'leaderboard' => $leaderboard,
+            'gamecode' => $gamecode,
         ]);
     }
 
@@ -322,5 +337,18 @@ class GameController extends Controller
 
         $this->updateCurrentPlayerState($currentPlayer, $gamecode, false);
         $this->updateCurrentPlayerState($nextPlayer, $gamecode, true);
+    }
+
+    private function endGame(string $gamecode)
+    {
+
+        broadcast(new GameRealtimeEvent(
+            gamecode: $gamecode,
+            type: 'gameEnded',
+
+        ));
+
+
+        return '';
     }
 }

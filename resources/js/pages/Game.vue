@@ -133,7 +133,7 @@
 </template>
 
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useToast } from 'vue-toast-notification';
@@ -166,6 +166,7 @@ const specialPopup = ref({
     message: '',
     type: '',
 });
+
 const specialPopupClasses = computed(() => {
     switch (specialPopup.value.type) {
         case 'bonus':
@@ -259,74 +260,86 @@ onMounted(() => {
             toast.error(`${user.username} has left.`);
         })
         .listen('.GameRealtimeEvent', (event) => {
-            if (event.type === 'rollDiceResult') {
-                const affectedPlayer = activePlayers.value.find((player) => player.id === event.data.player_id);
-                if (affectedPlayer) {
-                    affectedPlayer.position = event.data.position;
-                    if (event.data.score !== undefined) {
+            switch (event.type) {
+                case 'rollDiceResult': {
+                    const affectedPlayer = activePlayers.value.find((player) => player.id === event.data.player_id);
+                    if (affectedPlayer) {
+                        affectedPlayer.position = event.data.position;
+                        if (event.data.score !== undefined) {
+                            affectedPlayer.score = event.data.score;
+                        }
+                        if (event.data.prison_turns !== undefined) {
+                            affectedPlayer.prison_turns = event.data.prison_turns;
+                        }
+                        if (!event.data.requiresQuestion) {
+                            affectedPlayer.question = null;
+                        }
+                    }
+                    // Mettre à jour canRoll pour tous les joueurs
+                    if (event.data.canRoll !== undefined) {
+                        activePlayers.value.forEach((player) => {
+                            player.canRoll = event.data.canRoll;
+                        });
+                    }
+
+                    if (event.data.bonus === true && event.data.player_id === props.playerId) {
+                        showTemporaryPopup({
+                            title: 'Bonus +2 points',
+                            message: 'Excellent ! you gain 2 points without answering a quiz.',
+                            type: 'bonus',
+                        });
+                    } else if (event.data.malus === true && event.data.player_id === props.playerId) {
+                        showTemporaryPopup({
+                            title: 'Malus -2 points',
+                            message: 'Oops ! you lose 2 points immediately.',
+                            type: 'malus',
+                        });
+                    } else if (event.data.prison_turns && event.data.player_id === props.playerId) {
+                        showTemporaryPopup({
+                            title: 'You are in prison',
+                            message: 'Your next turn is blocked. Please wait a moment!',
+                            type: 'prison',
+                        });
+                    }
+
+                    toast.success(`${affectedPlayer?.username} has rolled a ${event.data.result}!`);
+                    break;
+                }
+                case 'gameEnded':
+                    router.visit(`/leaderboard/${props.gamecode}`);
+                    break;
+                case 'question': {
+                    const targetPlayer = activePlayers.value.find((player) => player.id === event.data.player_id);
+                    if (targetPlayer) {
+                        targetPlayer.question = event.data.question;
+                    }
+                    // Afficher le quiz uniquement pour le joueur concerné
+                    if (event.data.player_id === props.playerId) {
+                        question.value = event.data.question;
+                        showQuizPopup.value = true;
+                    }
+                    break;
+                }
+                case 'questionAnsweredResult': {
+                    const affectedPlayer = activePlayers.value.find((player) => player.id === event.data.player_id);
+                    if (affectedPlayer) {
                         affectedPlayer.score = event.data.score;
-                    }
-                    if (event.data.prison_turns !== undefined) {
-                        affectedPlayer.prison_turns = event.data.prison_turns;
-                    }
-                    if (!event.data.requiresQuestion) {
                         affectedPlayer.question = null;
                     }
+                    // Réactiver canRoll pour tous les joueurs après avoir répondu
+                    if (event.data.canRoll !== undefined) {
+                        activePlayers.value.forEach((player) => {
+                            player.canRoll = event.data.canRoll;
+                        });
+                    }
+                    if (event.data.player_id === props.playerId) {
+                        showQuizPopup.value = false;
+                        question.value = {};
+                    }
+                    break;
                 }
-                // Mettre à jour canRoll pour tous les joueurs
-                if (event.data.canRoll !== undefined) {
-                    activePlayers.value.forEach((player) => {
-                        player.canRoll = event.data.canRoll;
-                    });
-                }
-
-                if (event.data.bonus === true && event.data.player_id === props.playerId) {
-                    showTemporaryPopup({
-                        title: 'Bonus +2 points',
-                        message: 'Excellent ! you gain 2 points without answering a quiz.',
-                        type: 'bonus',
-                    });
-                } else if(event.data.malus === true && event.data.player_id === props.playerId) {
-                    showTemporaryPopup({
-                        title: 'Malus -2 points',
-                        message: 'Oops ! you lose 2 points immediately.',
-                    type: 'malus',
-                });
-            } else if (event.data.prison_turns && event.data.player_id === props.playerId) {
-                showTemporaryPopup({
-                    title: 'You are in prison',
-                    message: 'Your next turn is blocked. Please wait a moment!',
-                    type: 'prison',
-                });
-            }
-
-                toast.success(`${affectedPlayer?.username} has rolled a ${event.data.result}!`);
-            } else if (event.type === 'question') {
-                const targetPlayer = activePlayers.value.find((player) => player.id === event.data.player_id);
-                if (targetPlayer) {
-                    targetPlayer.question = event.data.question;
-                }
-                // Afficher le quiz uniquement pour le joueur concerné
-                if (event.data.player_id === props.playerId) {
-                    question.value = event.data.question;
-                    showQuizPopup.value = true;
-                }
-            } else if (event.type === 'questionAnsweredResult') {
-                const affectedPlayer = activePlayers.value.find((player) => player.id === event.data.player_id);
-                if (affectedPlayer) {
-                    affectedPlayer.score = event.data.score;
-                    affectedPlayer.question = null;
-                }
-                // Réactiver canRoll pour tous les joueurs après avoir répondu
-                if (event.data.canRoll !== undefined) {
-                    activePlayers.value.forEach((player) => {
-                        player.canRoll = event.data.canRoll;
-                    });
-                }
-                if (event.data.player_id === props.playerId) {
-                    showQuizPopup.value = false;
-                    question.value = {};
-                }
+                default:
+                    break;
             }
         })
         .listen('.CurrentPlayerUpdated', (event) => {

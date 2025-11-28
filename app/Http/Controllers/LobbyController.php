@@ -6,51 +6,64 @@ use App\Events\GameRealtimeEvent;
 use Illuminate\Http\Request;
 use App\Models\Lobby;
 use App\Models\Player;
-
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Arr;
-
+use Illuminate\Validation\ValidationException;
+use Exception;
 
 class LobbyController extends Controller
 {
     public function join(Request $request)
     {
+        $request->validate([
+            'username' => ['required', 'string', 'max:255'],
+            'gamecode' => ['required', 'string', 'size:6'],
+        ]);
+
         $colors = ['purple', 'blue', 'green', 'yellow', 'orange', 'red', 'pink', 'brown'];
 
+        try {
+            $gamecode = $request->string('gamecode')->value();
+            $username = $request->string('username')->value();
 
-        $gamecode = $request->get('gamecode');
-        $username = $request->get('username');
+            $lobby = Lobby::firstOrCreate(['gamecode' => $gamecode]);
 
-        $lobby = Lobby::firstOrCreate(['gamecode' => $gamecode]);
+            if ($lobby->is_started) {
+                throw ValidationException::withMessages([
+                    'gamecode' => 'Game already started',
+                ]);
+            }
 
-        // Vérifier si un joueur avec ce username existe déjà dans ce lobby
-        $player = Player::where('lobby_id', $lobby->id)
-            ->where('username', $username)
-            ->first();
+            $player = Player::where('lobby_id', $lobby->id)
+                ->where('username', $username)
+                ->first();
 
-        if ($player) {
-            // Réutiliser le joueur existant et réinitialiser son status
-            $player->status = 'waiting';
-            $player->save();
-        } else {
-            // Créer un nouveau joueur
-        $player = Player::create([
-            'username' => $username,
-            'lobby_id' => $lobby->id,
-            'status' => 'waiting',
-            'color' => $colors[array_rand($colors)],
-            'score' => 0,
-            'position' => 0,
-            'order' => 0,
-        ]);
+            if ($player) {
+                $player->status = 'waiting';
+                $player->save();
+            } else {
+                $player = Player::create([
+                    'username' => $username,
+                    'lobby_id' => $lobby->id,
+                    'status' => 'waiting',
+                    'color' => $colors[array_rand($colors)],
+                    'score' => 0,
+                    'position' => 0,
+                    'order' => 0,
+                ]);
+            }
+
+            session(['player_id' => $player->id]);
+            Auth::login($player);
+
+            return redirect()->route('lobby.show', ['gamecode' => $lobby->gamecode]);
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (Exception $e) {
+            throw ValidationException::withMessages([
+                'gamecode' => $e->getMessage(),
+            ]);
         }
-
-        $playerId = $player->id;
-
-        session(['player_id' => $playerId]);
-        Auth::login($player);
-
-        return redirect()->route('lobby.show', ['gamecode' => $lobby->gamecode]);
     }
 
     public function updatePlayerStatus(Request $request, $playerId)

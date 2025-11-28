@@ -12,7 +12,7 @@
                     </div>
                 </div>
 
-                <form id="game-form" class="section-clickable space-y-6" @submit.prevent="form.post('/join-game')">
+                <form id="game-form" class="section-clickable space-y-6" @submit.prevent="joinGame">
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-gray-300" contenteditable="false">Username</label>
                         <Input v-model="form.username" placeholder="John Doe" required />
@@ -41,12 +41,28 @@
 
 <script setup>
 import logo from '../../img/logo.svg';
-
+import { useToast } from 'vue-toast-notification';
 import { Icon } from '@iconify/vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import Input from '../components/Input.vue';
+
+const toast = useToast();
 const form = useForm({
     username: '',
     gamecode: '',
 });
+
+const joinGame = () => {
+    form.post('/join-game', {
+        onSuccess: () => {
+            toast.success('Game joined successfully');
+        },
+        onError: (errors) => {
+            const message = Object.values(errors)
+                .flat()
+                .join(' ');
+            toast.error(message || 'Impossible de rejoindre la partie.');
+        },
+    });
+};
 </script>
